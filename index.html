@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Merry Christmas, Jane! - Fixed Starfield</title>
+    <title>Merry Christmas, Jane!</title>
     <link href="https://fonts.loli.net/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; overflow: hidden; background-color: #020001; font-family: 'Cinzel', serif; touch-action: none; }
@@ -53,7 +53,13 @@
             color: rgba(255,182,193,0.7); font-size: 11px; pointer-events: none; z-index: 10; letter-spacing: 3px;
             text-shadow: 0 0 8px #FF1493; font-weight: bold;
         }
-        #error-msg { position: absolute; bottom: 70px; color: #ff5555; font-size: 12px; display: none; letter-spacing: 1px;}
+        
+        /* 错误日志显示区，如果黑屏这里会显示红字 */
+        #debug-log {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            pointer-events: none; z-index: 9999; color: red; padding: 20px; 
+            font-family: monospace; font-size: 12px; white-space: pre-wrap; display: none;
+        }
     </style>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -67,26 +73,37 @@
 </head>
 <body>
 
+    <div id="debug-log"></div>
+
     <div id="loading-screen">
         <div style="font-size: 28px; margin-bottom: 40px; letter-spacing: 6px; text-shadow: 0 0 25px rgba(255,20,147,0.7);">FOR JANE</div>
         <div class="loader-ring" id="spinner"></div>
-        <div class="loading-status" id="loading-text">Loading Experience...</div>
+        <div class="loading-status" id="loading-text">Preparing Surprise...</div>
+        
         <button id="btn-enter" onclick="startExperience()">OPEN GIFT</button>
+        
         <div class="sub-message">
             getting in the christmas spirit 💌✨❄️🥂<br>
             <span class="from-ivan-line">from ivan</span>
         </div>
-        <div id="error-msg">Network unstable. Please refresh.</div>
     </div>
 
     <div id="canvas-container"></div>
-    <div id="tips">Drag to explore Starfield • Release to reform Tree</div>
+    <div id="tips">Hold & Drag to explore Starfield • Release to reform Tree</div>
 
     <script>
+        // --- 错误捕获系统 ---
+        window.onerror = function(msg, url, line, col, error) {
+            const log = document.getElementById('debug-log');
+            log.style.display = 'block';
+            log.innerText += `Error: ${msg}\nLine: ${line}\n`;
+            document.getElementById('loading-text').innerText = "Error Detected (See Top Left)";
+        };
+
+        // 5秒强制显示按钮，防止无限加载
         setTimeout(() => {
             const btn = document.getElementById('btn-enter');
             if(getComputedStyle(btn).display === 'none') {
-                document.getElementById('error-msg').style.display = 'block';
                 document.getElementById('spinner').style.display = 'none';
                 document.getElementById('loading-text').style.display = 'none';
                 btn.style.display = 'block';
@@ -104,11 +121,9 @@
         varying vec3 vColor; varying float vIndexOffset; varying float vOpacity; varying float vY; 
         void main() {
             vColor = aColor; vIndexOffset = aIndexOffset; vec3 pos = position; vY = pos.y; 
-            // 旋转
             float rotFactor = smoothstep(0.8, 0.0, uExplodeState);
             float angle = uTime * 0.3 * rotFactor; float s = sin(angle); float c = cos(angle);
             float x = pos.x * c - pos.z * s; float z = pos.x * s + pos.z * c; pos.x = x; pos.z = z;
-            // 爆炸
             float explodeFactor = smoothstep(0.0, 1.0, uExplodeState) * 45.0; 
             pos += aRandomDir * explodeFactor * aRandomDist;
             float beatScale = 1.0 + uBeat * 0.3 + uFlash * 0.2;
@@ -126,7 +141,6 @@
         varying vec3 vColor; varying float vIndexOffset; varying float vOpacity;
         void main() {
             vColor = aColor; vIndexOffset = aIndexOffset; vec3 pos = position;
-            // 随机游动
             float timeScale = uTime * 0.5;
             pos.x += sin(timeScale + aDrift.x * 10.0) * aDrift.x * 8.0;
             pos.y += cos(timeScale * 0.8 + aDrift.y * 10.0) * aDrift.y * 8.0;
@@ -185,11 +199,11 @@
             btn.style.display = 'block';
             subMessage.style.display = 'block';
         }
-        setTimeout(showEnterButton, 4000);
-
+        
         let scene, camera, renderer, composer, controls, analyser, clock;
         let uniforms = { uTime: {value:0}, uBeat: {value:0}, uFlash: {value:0}, uExplodeState: {value:0} };
-        let boltUniforms, heartUniforms, bgUniforms;
+        // 独立的uniforms引用，防止混淆
+        let boltUniforms, heartUniforms, boltBgUniforms, starBgUniforms;
         let bloomPass;
         let loadedAudio = null;
         let loadedTextures = [];
@@ -201,15 +215,15 @@
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(emoji, size/2, size/2+size*0.05);
             const tex = new THREE.CanvasTexture(canvas); tex.needsUpdate = true; return tex;
         }
+        
+        // 创建纹理
         const boltTexture = createEmojiTexture('⚡️', 128); 
         const heartTexture = createEmojiTexture('💖', 128);
-        // 【核心修复】之前漏掉了这个，导致黑屏
-        const starTexture = createEmojiTexture('🌟', 64); 
+        const starTexture = createEmojiTexture('🌟', 64);
 
         function checkDeps() {
             if (typeof THREE === 'undefined') {
-                document.getElementById('error-msg').innerText = "3D Engine failed. Refresh needed.";
-                document.getElementById('error-msg').style.display = 'block';
+                console.error("Three.js not loaded");
                 return false;
             } return true;
         }
@@ -220,26 +234,38 @@
             const texLoader = new THREE.TextureLoader(manager);
             const audioLoader = new THREE.AudioLoader(manager);
             manager.onLoad = showEnterButton;
-            audioLoader.load(config.musicPath, (buffer) => { loadedAudio = buffer; }, undefined, () => {});
+            
+            // 容错处理：如果音频加载失败，不要卡住
+            audioLoader.load(config.musicPath, (buffer) => { loadedAudio = buffer; }, undefined, (err) => { console.log("Audio load error, skipping"); });
+            
             for(let i=1; i<=config.maxPhotos; i++) {
-                texLoader.load(`./photos/${i}.jpg`, (tex) => { 
-                    tex.generateMipmaps = false; tex.minFilter = THREE.LinearFilter; loadedTextures.push(tex); 
-                }, undefined, () => {});
+                texLoader.load(`./photos/${i}.jpg`, 
+                    (tex) => { 
+                        tex.generateMipmaps = false; tex.minFilter = THREE.LinearFilter; loadedTextures.push(tex); 
+                    }, 
+                    undefined, 
+                    (err) => { console.log(`Photo ${i} missing, skipping`); }
+                );
             }
         }
         window.onload = initLoader;
 
         window.startExperience = function() {
-            if(!checkDeps()) return;
-            document.getElementById('loading-screen').style.opacity = 0;
-            setTimeout(()=>document.getElementById('loading-screen').style.display='none', 1200);
-            document.getElementById('canvas-container').style.opacity = 1;
-            initScene();
-            if(loadedAudio) {
-                const listener = new THREE.AudioListener(); camera.add(listener);
-                const sound = new THREE.Audio(listener); sound.setBuffer(loadedAudio);
-                sound.setLoop(true); sound.setVolume(0.5); sound.play();
-                analyser = new THREE.AudioAnalyser(sound, 32);
+            try {
+                if(!checkDeps()) return;
+                document.getElementById('loading-screen').style.opacity = 0;
+                setTimeout(()=>document.getElementById('loading-screen').style.display='none', 1200);
+                document.getElementById('canvas-container').style.opacity = 1;
+                initScene();
+                if(loadedAudio) {
+                    const listener = new THREE.AudioListener(); camera.add(listener);
+                    const sound = new THREE.Audio(listener); sound.setBuffer(loadedAudio);
+                    sound.setLoop(true); sound.setVolume(0.5); sound.play().catch(e=>console.log("Auto-play prevented"));
+                    analyser = new THREE.AudioAnalyser(sound, 32);
+                }
+            } catch(e) {
+                console.error(e);
+                alert("Error starting: " + e.message);
             }
         }
 
@@ -330,29 +356,36 @@
             scene.add(new THREE.Points(heartGeo, heartMat));
 
             // --- 3. 满屏游动背景 (闪电⚡️ + 星星🌟) ---
-            bgUniforms = THREE.UniformsUtils.clone(uniforms);
-            // 闪电
+            // 修复：分别为背景闪电和背景星星创建独立的 Uniforms
+            boltBgUniforms = THREE.UniformsUtils.clone(uniforms);
+            boltBgUniforms.uTexture = { value: boltTexture }; // 明确赋值
             const boltGeo = new THREE.BufferGeometry(); setupBackgroundParticles(boltGeo, 300, 1.5, new THREE.Vector3(1.2, 0.9, 1.0));
-            const boltMat = new THREE.ShaderMaterial({ uniforms: bgUniforms, vertexShader: document.getElementById('backgroundVertex').textContent, fragmentShader: document.getElementById('textureFragment').textContent, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true });
-            boltMat.uniforms.uTexture.value = boltTexture;
+            const boltMat = new THREE.ShaderMaterial({ uniforms: boltBgUniforms, vertexShader: document.getElementById('backgroundVertex').textContent, fragmentShader: document.getElementById('textureFragment').textContent, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true });
             scene.add(new THREE.Points(boltGeo, boltMat));
-            // 星星 (现在 starTexture 已定义，不会报错)
+
+            starBgUniforms = THREE.UniformsUtils.clone(uniforms);
+            starBgUniforms.uTexture = { value: starTexture }; // 明确赋值
             const starBgGeo = new THREE.BufferGeometry(); setupBackgroundParticles(starBgGeo, 400, 1.0, new THREE.Vector3(1.0, 0.8, 0.6));
-            const starBgMat = new THREE.ShaderMaterial({ uniforms: bgUniforms, vertexShader: document.getElementById('backgroundVertex').textContent, fragmentShader: document.getElementById('textureFragment').textContent, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true });
-            starBgMat.uniforms.uTexture.value = starTexture;
+            const starBgMat = new THREE.ShaderMaterial({ uniforms: starBgUniforms, vertexShader: document.getElementById('backgroundVertex').textContent, fragmentShader: document.getElementById('textureFragment').textContent, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true });
             scene.add(new THREE.Points(starBgGeo, starBgMat));
 
-            // --- 4. 照片墙 ---
+            // --- 4. 照片墙 (容错处理：有多少照片显示多少) ---
             const pMat = new THREE.ShaderMaterial({ uniforms: {tDiffuse:{value:null}, uTime:uniforms.uTime, uFlash:uniforms.uFlash}, vertexShader: `varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix * modelViewMatrix * vec4(position,1.0);}`, fragmentShader: document.getElementById('photoFragment').textContent, side: THREE.DoubleSide, transparent: false, depthWrite: true });
-            loadedTextures.forEach((tex, i) => {
-                const asp = tex.image.width/tex.image.height; const m = pMat.clone(); m.uniforms.tDiffuse.value=tex; m.uniforms.uFlash=uniforms.uFlash;
-                const mesh = new THREE.Mesh(new THREE.PlaneGeometry(3.8*asp, 3.8), m);
-                const y=(Math.random()*20)-10, r=(1-(y+12)/28)*15+3.0, a=(i/loadedTextures.length)*6.28+Math.random()*0.5;
-                mesh.userData.originPos = new THREE.Vector3(Math.cos(a)*r, y, Math.sin(a)*r);
-                mesh.userData.targetPos = new THREE.Vector3((Math.random()-0.5)*16, (Math.random()-0.5)*14, (Math.random()*8) + 14);
-                mesh.position.copy(mesh.userData.originPos); mesh.lookAt(0,y,0); mesh.userData.originRot = mesh.rotation.clone();
-                scene.add(mesh); photoMeshes.push(mesh);
-            });
+            
+            if(loadedTextures.length > 0) {
+                // 如果只传了3张图但maxPhotos是7，就循环使用
+                for(let i=0; i<config.maxPhotos; i++) {
+                    const tex = loadedTextures[i % loadedTextures.length];
+                    const asp = tex.image ? (tex.image.width/tex.image.height) : 1.0;
+                    const m = pMat.clone(); m.uniforms.tDiffuse.value=tex; m.uniforms.uFlash=uniforms.uFlash;
+                    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(3.8*asp, 3.8), m);
+                    const y=(Math.random()*20)-10, r=(1-(y+12)/28)*15+3.0, a=(i/config.maxPhotos)*6.28+Math.random()*0.5;
+                    mesh.userData.originPos = new THREE.Vector3(Math.cos(a)*r, y, Math.sin(a)*r);
+                    mesh.userData.targetPos = new THREE.Vector3((Math.random()-0.5)*16, (Math.random()-0.5)*14, (Math.random()*8) + 14);
+                    mesh.position.copy(mesh.userData.originPos); mesh.lookAt(0,y,0); mesh.userData.originRot = mesh.rotation.clone();
+                    scene.add(mesh); photoMeshes.push(mesh);
+                }
+            }
             
             // --- 5. 顶部实体五角星 ---
             const starGeo = createStandingStarGeometry(2.2, 1.0, 0.7); 
@@ -367,7 +400,6 @@
             animate();
         }
 
-        // --- 背景粒子函数 ---
         function setupBackgroundParticles(geo, count, scaleMult, colorVec) {
             const bPos=[], bScale=[], bCol=[], bOffset=[], bDrift=[];
             for(let i=0; i<count; i++) {
@@ -380,7 +412,6 @@
             geo.setAttribute('position', new THREE.Float32BufferAttribute(bPos, 3)); geo.setAttribute('aScale', new THREE.Float32BufferAttribute(bScale, 1)); geo.setAttribute('aColor', new THREE.Float32BufferAttribute(bCol, 3)); geo.setAttribute('aIndexOffset', new THREE.Float32BufferAttribute(bOffset, 1)); geo.setAttribute('aDrift', new THREE.Float32BufferAttribute(bDrift, 3));
         }
 
-        // --- 爆炸纹理粒子函数 ---
         function setupTextureParticles(geo, count, scaleMult, colorVec, wideSpread) {
             const bPos=[], bScale=[], bCol=[], bRDir=[], bRDist=[], bOffset=[];
             for(let i=0; i<count; i++) {
@@ -410,7 +441,8 @@
             uniforms.uTime.value = t;
             if(boltUniforms) boltUniforms.uTime.value = t;
             if(heartUniforms) heartUniforms.uTime.value = t;
-            if(bgUniforms) bgUniforms.uTime.value = t;
+            if(boltBgUniforms) boltBgUniforms.uTime.value = t;
+            if(starBgUniforms) starBgUniforms.uTime.value = t;
 
             if(analyser) { const beat = analyser.getAverageFrequency()/255; uniforms.uBeat.value = beat; if(boltUniforms) boltUniforms.uBeat.value = beat; if(heartUniforms) heartUniforms.uBeat.value = beat; }
             
