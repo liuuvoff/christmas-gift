@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Merry Christmas, Jane! - Ultimate Edition</title>
+    <title>Merry Christmas, Jane! - Starfield Edition</title>
     <link href="https://fonts.loli.net/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Cinzel', serif; touch-action: none; }
@@ -49,7 +49,7 @@
         }
 
         #canvas-container { position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 1.5s; }
-        /* 更新了提示文字 */
+        /* 更新提示文字 */
         #tips {
             position: absolute; bottom: 30px; width: 100%; text-align: center;
             color: rgba(255,255,255,0.5); font-size: 11px; pointer-events: none; z-index: 10; letter-spacing: 2px;
@@ -85,7 +85,7 @@
     </div>
 
     <div id="canvas-container"></div>
-    <div id="tips">Swipe Fast to Explode • Wait to Collapse</div>
+    <div id="tips">Drag to enter Starfield • Release to collapse</div>
 
     <script>
         setTimeout(() => {
@@ -112,26 +112,25 @@
             vColor = aColor; vIndexOffset = aIndexOffset;
             vec3 pos = position;
             
-            // 基础旋转 (仅在未完全爆炸时旋转，避免晕眩)
-            float rotFactor = 1.0 - uExplodeState * 0.8;
+            // 仅在接近树状时旋转，避免星空晕眩
+            float rotFactor = smoothstep(0.6, 0.0, uExplodeState);
             float angle = uTime * 0.05 * rotFactor;
             float s = sin(angle); float c = cos(angle);
             float x = pos.x * c - pos.z * s; float z = pos.x * s + pos.z * c; pos.x = x; pos.z = z;
             
-            // --- 核心交互：持久化爆炸 ---
-            // 基于状态值 uExplodeState 插值位置
-            float explodeFactor = smoothstep(0.0, 1.0, uExplodeState) * 25.0; 
+            // --- 核心交互：基于状态的星空散布 ---
+            // 扩大爆炸范围，形成星空感
+            float explodeFactor = smoothstep(0.0, 1.0, uExplodeState) * 35.0; 
             pos += aRandomDir * explodeFactor * aRandomDist;
 
             float beatScale = 1.0 + uBeat * 0.3 + uFlash * 0.2;
             vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
             gl_Position = projectionMatrix * mvPosition;
             
-            // 粒子大小调整，爆炸时稍微变大
-            float explodeSizeBoost = 1.0 + uExplodeState * 0.5;
-            gl_PointSize = ((4.0 + uFlash * 3.0) * aScale * beatScale * explodeSizeBoost) * (350.0 / -mvPosition.z);
+            // 爆炸时粒子稍微变小，像星星
+            float starSize = mix(1.0, 0.7, uExplodeState);
+            gl_PointSize = ((4.0 + uFlash * 3.0) * aScale * beatScale * starSize) * (350.0 / -mvPosition.z);
             
-            // 闪烁逻辑
             vOpacity = step(0.7, sin(uTime * 25.0 + aIndexOffset * 10.0)); 
         }
     </script>
@@ -141,12 +140,19 @@
         void main() {
             float dist = length(gl_PointCoord.xy - 0.5);
             if(dist > 0.5) discard;
-            float core = 1.0 - smoothstep(0.0, 0.08, dist); 
-            float glow = 1.0 - smoothstep(0.08, 0.45, dist);
-            vec3 baseColor = vColor * glow;
-            vec3 coreColor = vec3(1.5, 1.5, 1.2) * core * 2.5;
+            
+            // 【核心改动】使用指数级衰减创造极其锐利的光点
+            // core: 极小的超亮核心
+            float core = pow(1.0 - smoothstep(0.0, 0.1, dist), 8.0);
+            // glow: 紧贴核心的快速衰减光晕
+            float glow = pow(1.0 - smoothstep(0.05, 0.4, dist), 3.0);
+
+            vec3 baseColor = vColor * glow * 0.8; // 基础发光
+            vec3 coreColor = vec3(1.8, 1.6, 1.2) * core; // 超亮白金核心
+            
             vec3 finalColor = baseColor + coreColor;
-            finalColor = mix(finalColor, vec3(1.8), uFlash * 0.5);
+            finalColor = mix(finalColor, vec3(2.0), uFlash * 0.5); // 闪光时更亮
+
             gl_FragColor = vec4(finalColor, 1.0);
         }
     </script>
@@ -159,12 +165,9 @@
         void main() {
             vec4 texColor = texture2D(uTexture, gl_PointCoord);
             if(texColor.a < 0.1) discard;
-            
-            // 随机闪烁噪声
             float noise = random(vec2(uTime * 5.0, vIndexOffset));
             float flash = step(0.85, noise);
-
-            // 使用传入的颜色 (vColor) 并应用闪烁和纹理alpha
+            // 使用 vOpacityBoost 控制的透明度
             gl_FragColor = vec4(vColor * (0.8 + flash*0.4), texColor.a * vOpacity);
         }
     </script>
@@ -202,13 +205,13 @@
         setTimeout(showEnterButton, 4000);
 
         let scene, camera, renderer, composer, controls, analyser;
-        // 新增 uExplodeState: 0 (树) -> 1 (爆炸)
+        // uExplodeState: 0 (树) -> 1 (星空)
         let uniforms = { uTime: {value:0}, uBeat: {value:0}, uFlash: {value:0}, uExplodeState: {value:0} };
         let boltUniforms, heartUniforms;
         let bloomPass;
         let loadedAudio = null;
         let loadedTextures = [];
-        let photoMeshes = []; // 存储照片网格以便移动它们
+        let photoMeshes = [];
 
         // --- 纹理生成 ---
         function createEmojiTexture(emoji, size) {
@@ -261,55 +264,35 @@
             }
         }
 
-        function createTextParticles(text, fontSize, containerGeo) {
-            const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
-            canvas.width = 512; canvas.height = 128; ctx.fillStyle = 'black'; ctx.fillRect(0,0,512,128);
-            ctx.fillStyle = 'white'; ctx.font = `bold ${fontSize}px 'Cinzel', serif`;
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, 256, 64);
-            const data = ctx.getImageData(0,0,512,128).data;
-            const pos = containerGeo.attributes.position.array; const scale = containerGeo.attributes.aScale.array; const col = containerGeo.attributes.aColor.array;
-            let p=pos.length, s=scale.length, c=col.length;
-            for(let y=0;y<128;y+=3) for(let x=0;x<512;x+=3) {
-                if(data[(y*512+x)*4]>128) {
-                    const u=x/512, v=y/128, angle=(u-0.5)*4.5;
-                    pos[p++]=Math.cos(angle)*10; pos[p++]=(1-v)*3-11; pos[p++]=Math.sin(angle)*10;
-                    scale[s++]=Math.random()*0.6+0.4; 
-                    col[c++]=1.3; col[c++]=1.1; col[c++]=0.6;
-                }
-            }
-            return p;
-        }
-
         function initScene() {
             const container = document.getElementById('canvas-container');
-            // 【关键升级：开启原生抗锯齿 MSAA】
+            // 开启 MSAA 抗锯齿
             renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
             renderer.setSize(window.innerWidth, window.innerHeight);
-            // 保持高分辨率比
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 3)); 
-            renderer.toneMapping = THREE.ACESFilmicToneMapping; // 回到更有电影感的 ToneMapping
-            renderer.toneMappingExposure = 1.2;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.0;
             container.appendChild(renderer.domElement);
 
             scene = new THREE.Scene(); 
-            scene.fog = new THREE.FogExp2(0x000000, 0.035);
+            scene.fog = new THREE.FogExp2(0x000000, 0.025); // 降低雾气浓度，让星空更透亮
             
             camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 100);
             camera.position.set(0, 5, 38);
             
             controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enableDamping=true; controls.dampingFactor = 0.05;
+            controls.enableDamping=true; controls.dampingFactor = 0.1; // 增加阻尼感
             controls.autoRotate=true; controls.autoRotateSpeed=0.5; 
             controls.enableZoom=false;
+            // 禁用原本的平移，交给我们的逻辑处理
+            controls.enablePan = false; 
 
-            // Bloom 参数 (配合 MSAA，非常克制)
+            // Bloom 参数 (配合锐利Shader)
             bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-            bloomPass.threshold=0.98; // 极高门槛
-            bloomPass.strength=0.6;   
+            bloomPass.threshold=0.97; // 极高门槛
+            bloomPass.strength=0.5;   // 中等强度
             bloomPass.radius=0.1;    // 极小半径
             composer = new THREE.EffectComposer(renderer); 
-            // 注意：使用 MSAA 时，通常不需要 RenderPass，直接用 renderer.render，但为了 Bloom 还是需要 composer
-            // 这里的处理方式依赖于 three.js 版本，当前组合在移动端通常表现良好。
             composer.addPass(new THREE.RenderPass(scene, camera)); 
             composer.addPass(bloomPass);
 
@@ -335,92 +318,68 @@
                 else { const b = Math.random()*0.4+0.7; col[c++]=b+Math.random()*0.1; col[c++]=b*0.88; col[c++]=b*0.1; }
                 const theta=Math.random()*6.28; const phi=Math.acos(2*Math.random()-1);
                 rDir[rd++]=Math.sin(phi)*Math.cos(theta); rDir[rd++]=Math.sin(phi)*Math.sin(theta); rDir[rd++]=Math.cos(phi);
-                rDist[rdi++]=Math.random()*2.0+0.5; offset[off++]=Math.random()*100;
+                rDist[rdi++]=Math.random()*2.5+1.0; offset[off++]=Math.random()*100;
             }
-            const endIdx = createTextParticles("IVAN STUDIO", 85, treeGeo);
-            treeGeo.setDrawRange(0, endIdx/3);
+            // 移除文字粒子，让星空更纯粹
+            // const endIdx = createTextParticles("IVAN STUDIO", 85, treeGeo); treeGeo.setDrawRange(0, endIdx/3);
             const treeMat = new THREE.ShaderMaterial({ uniforms: uniforms, vertexShader: document.getElementById('commonVertex').textContent, fragmentShader: document.getElementById('particleFragment').textContent, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true });
             scene.add(new THREE.Points(treeGeo, treeMat));
 
             // --- 2. 闪电⚡️粒子层 ---
             const boltGeo = new THREE.BufferGeometry();
-            setupTextureParticles(boltGeo, 350, 1.2); // 辅助函数初始化几何体
+            setupTextureParticles(boltGeo, 350, 1.2);
             boltUniforms = THREE.UniformsUtils.clone(uniforms);
             boltUniforms.uTexture = { value: boltTexture };
             const boltMat = new THREE.ShaderMaterial({ uniforms: boltUniforms, vertexShader: document.getElementById('commonVertex').textContent, fragmentShader: document.getElementById('textureFragment').textContent, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true });
             scene.add(new THREE.Points(boltGeo, boltMat));
             
-            // --- 3. 【新增】粉色爱心💖粒子层 ---
+            // --- 3. 粉色爱心💖粒子层 ---
             const heartGeo = new THREE.BufferGeometry();
-            // 设置为粉色
             setupTextureParticles(heartGeo, 400, 1.0, new THREE.Vector3(1.5, 0.5, 0.8)); 
             heartUniforms = THREE.UniformsUtils.clone(uniforms);
             heartUniforms.uTexture = { value: heartTexture };
             const heartMat = new THREE.ShaderMaterial({
                 uniforms: heartUniforms,
                 vertexShader: document.getElementById('commonVertex').textContent,
-                // 复用纹理 Shader，但透明度受 uExplodeState 控制
                 fragmentShader: document.getElementById('textureFragment').textContent,
                 blending: THREE.AdditiveBlending, depthWrite: false, transparent: true
             });
-            // 初始不可见，通过修改顶点的透明度属性控制
-            const heartOpacities = new Float32Array(heartGeo.attributes.aScale.count).fill(0.0); // 初始透明度为0
-            heartGeo.setAttribute('aOpacityBoost', new THREE.BufferAttribute(heartOpacities, 1));
-            
-            // 修改 Shader 以支持透明度控制 (简单 hack，直接乘在片元着色器里)
+            // Hack shader for opacity boost
             heartMat.onBeforeCompile = (shader) => {
-                shader.vertexShader = shader.vertexShader.replace('void main() {', 'attribute float aOpacityBoost; varying float vOpacityBoost; void main() { vOpacityBoost = aOpacityBoost;');
+                shader.vertexShader = shader.vertexShader.replace('void main() {', 'varying float vOpacityBoost; void main() { vOpacityBoost = smoothstep(0.2, 0.8, uExplodeState);');
                 shader.fragmentShader = shader.fragmentShader.replace('void main() {', 'varying float vOpacityBoost; void main() {');
-                shader.fragmentShader = shader.fragmentShader.replace('gl_FragColor = vec4(vColor * (0.8 + flash*0.4), texColor.a * vOpacity);', 'gl_FragColor = vec4(vColor * (0.8 + flash*0.4), texColor.a * vOpacity * vOpacityBoost);');
+                shader.fragmentShader = shader.fragmentShader.replace('texColor.a * vOpacity);', 'texColor.a * vOpacity * vOpacityBoost);');
             };
             scene.add(new THREE.Points(heartGeo, heartMat));
-            this.heartGeo = heartGeo; // 保存引用以便更新
 
-            // --- 4. 照片墙 (带位置记录) ---
+            // --- 4. 照片墙 ---
             const pMat = new THREE.ShaderMaterial({ uniforms: {tDiffuse:{value:null}, uTime:uniforms.uTime, uFlash:uniforms.uFlash}, vertexShader: `varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix * modelViewMatrix * vec4(position,1.0);}`, fragmentShader: document.getElementById('photoFragment').textContent, side: THREE.DoubleSide, transparent: false, depthWrite: true });
             loadedTextures.forEach((tex, i) => {
                 const asp = tex.image.width/tex.image.height; const m = pMat.clone(); m.uniforms.tDiffuse.value=tex; m.uniforms.uFlash=uniforms.uFlash;
                 const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2.8*asp, 2.8), m);
                 const y=(Math.random()*16)-8, r=(1-(y+10)/24)*9+1.5, a=(i/loadedTextures.length)*6.28+Math.random()*0.5;
-                // 保存原始位置和目标中心位置
                 mesh.userData.originPos = new THREE.Vector3(Math.cos(a)*r, y, Math.sin(a)*r);
-                // 目标位置：中心附近随机散开一点
-                mesh.userData.targetPos = new THREE.Vector3((Math.random()-0.5)*5, (Math.random()-0.5)*5, (Math.random()-0.5)*2 + 2);
-                
-                mesh.position.copy(mesh.userData.originPos);
-                mesh.lookAt(0,y,0); 
-                // 保存原始旋转
+                // 目标位置：更靠近中心且稍微散开
+                mesh.userData.targetPos = new THREE.Vector3((Math.random()-0.5)*8, (Math.random()-0.5)*6, (Math.random()-0.5)*5);
+                mesh.position.copy(mesh.userData.originPos); mesh.lookAt(0,y,0); 
                 mesh.userData.originRot = mesh.rotation.clone();
-
-                scene.add(mesh);
-                photoMeshes.push(mesh);
+                scene.add(mesh); photoMeshes.push(mesh);
             });
             
-            // --- 5. 【新增】顶部实体星星 ---
+            // --- 5. 顶部实体星星 ---
             const starGeo = new THREE.OctahedronGeometry(1.5, 0);
-            const starMat = new THREE.MeshBasicMaterial({ color: 0xFFD700 }); // 基础材质，最亮
+            const starMat = new THREE.MeshBasicMaterial({ color: 0xFFD700 });
             const topStar = new THREE.Mesh(starGeo, starMat);
             topStar.position.set(0, 12.5, 0);
-            // 加一个点光源让它照亮周围
             const starLight = new THREE.PointLight(0xFFD700, 1.5, 20);
             starLight.position.set(0, 12.5, 0);
             scene.add(topStar); scene.add(starLight);
             this.topStar = topStar;
 
-            // Raycaster
-            const raycaster = new THREE.Raycaster();
-            renderer.domElement.addEventListener('pointerdown', (e) => {
-                const x=(e.clientX/window.innerWidth)*2-1, y=-(e.clientY/window.innerHeight)*2+1;
-                raycaster.setFromCamera({x,y}, camera);
-                const hits = raycaster.intersectObjects(photoMeshes);
-                if(hits.length>0) { controls.autoRotate=false; const p=hits[0].object.position; const n=p.clone().setY(0).normalize(); camera.position.lerp(p.clone().add(n.multiplyScalar(4.5)), 0.1); controls.target.lerp(p,0.1); }
-                else { controls.autoRotate=true; }
-            });
-
+            setupInteraction();
             animate();
         }
 
-        // 辅助函数：初始化纹理粒子几何体
         function setupTextureParticles(geo, count, scaleMult, colorVec = new THREE.Vector3(1.0, 1.0, 1.0)) {
             const bPos=[], bScale=[], bCol=[], bRDir=[], bRDist=[], bOffset=[];
             for(let i=0; i<count; i++) {
@@ -431,7 +390,7 @@
                  bOffset.push(Math.random() * 100.0);
                  const theta=Math.random()*6.28; const phi=Math.acos(2*Math.random()-1);
                  bRDir.push(Math.sin(phi)*Math.cos(theta), Math.sin(phi)*Math.sin(theta), Math.cos(phi));
-                 bRDist.push(Math.random()*2.5 + 1.0);
+                 bRDist.push(Math.random()*3.5 + 1.5);
             }
             geo.setAttribute('position', new THREE.Float32BufferAttribute(bPos, 3));
             geo.setAttribute('aScale', new THREE.Float32BufferAttribute(bScale, 1));
@@ -441,12 +400,39 @@
             geo.setAttribute('aIndexOffset', new THREE.Float32BufferAttribute(bOffset, 1));
         }
 
-        // --- 核心动画与交互逻辑 ---
-        let fTime=0, nFlash=3, lastAngle=0;
-        let explodeState = 0.0; // 当前爆炸状态 (0-1)
-        let targetExplodeState = 0.0; // 目标状态
-        let idleTimer = 0.0; // 空闲计时器
+        // --- 核心交互逻辑 (新) ---
+        let isInteracting = false;
+        let idleTimer = 0.0;
+        let explodeState = 0.0; 
+        let targetExplodeState = 0.0;
 
+        function setupInteraction() {
+            const canvas = renderer.domElement;
+            // 监听按下和移动，视为交互开始
+            canvas.addEventListener('pointerdown', () => { isInteracting = true; idleTimer = 0; });
+            canvas.addEventListener('pointermove', () => { if(isInteracting) idleTimer = 0; });
+            // 监听抬起，视为交互结束，开始计时
+            canvas.addEventListener('pointerup', () => { isInteracting = false; });
+            canvas.addEventListener('pointercancel', () => { isInteracting = false; });
+            canvas.addEventListener('pointerleave', () => { isInteracting = false; });
+
+            // 点击照片聚焦 (保留)
+            const raycaster = new THREE.Raycaster();
+            canvas.addEventListener('pointerdown', (e) => {
+                if (explodeState < 0.5) return; // 只有在展开时才允许点击
+                const x=(e.clientX/window.innerWidth)*2-1, y=-(e.clientY/window.innerHeight)*2+1;
+                raycaster.setFromCamera({x,y}, camera);
+                const hits = raycaster.intersectObjects(photoMeshes);
+                if(hits.length>0) { 
+                    isInteracting = true; idleTimer = 0; // 点击也算交互
+                    const p=hits[0].object.position; const n=p.clone().normalize(); 
+                    camera.position.lerp(p.clone().add(n.multiplyScalar(3.0)), 0.2); 
+                    controls.target.lerp(p,0.2); 
+                }
+            });
+        }
+
+        let fTime=0, nFlash=3;
         function animate() {
             requestAnimationFrame(animate); 
             const t = performance.now()/1000; const dt = new THREE.Clock().getDelta();
@@ -455,65 +441,43 @@
             if(heartUniforms) heartUniforms.uTime.value = t;
             if(analyser) { const beat = analyser.getAverageFrequency()/255; uniforms.uBeat.value = beat; if(boltUniforms) boltUniforms.uBeat.value = beat; if(heartUniforms) heartUniforms.uBeat.value = beat; }
             
-            // 旋转顶部星星
-            if(this.topStar) this.topStar.rotation.y += dt * 0.5;
+            if(this.topStar) this.topStar.rotation.y += dt * 0.8;
 
             // --- 交互状态机 ---
-            const currentAngle = controls.getAzimuthalAngle();
-            let delta = Math.abs(currentAngle - lastAngle);
-            if (delta > Math.PI) delta = Math.PI * 2 - delta;
-            const rotationSpeed = delta / dt; // 计算瞬时旋转速度
-
-            // 阈值判断：快速旋转触发爆炸
-            if (rotationSpeed > 0.8) { 
-                targetExplodeState = 1.0;
-                idleTimer = 0.0; // 重置空闲计时
+            if (isInteracting) {
+                targetExplodeState = 1.0; // 正在交互，目标是展开
             } else {
-                // 速度低时开始计时
                 idleTimer += dt;
-                // 如果空闲超过 2.5 秒，触发收缩
-                if (idleTimer > 2.5) {
-                    targetExplodeState = 0.0;
+                if (idleTimer > 2.5) { // 空闲超过 2.5s
+                    targetExplodeState = 0.0; // 目标是收缩
                 }
             }
-            lastAngle = currentAngle;
 
-            // 平滑插值爆炸状态
-            explodeState = THREE.MathUtils.lerp(explodeState, targetExplodeState, dt * 2.0);
+            // 平滑插值状态
+            // 展开快 (dt*3)，收缩慢 (dt*1)
+            const lerpSpeed = targetExplodeState > explodeState ? dt * 3.0 : dt * 1.0;
+            explodeState = THREE.MathUtils.lerp(explodeState, targetExplodeState, lerpSpeed);
+            
             uniforms.uExplodeState.value = explodeState;
             if(boltUniforms) boltUniforms.uExplodeState.value = explodeState;
             if(heartUniforms) heartUniforms.uExplodeState.value = explodeState;
 
-            // --- 根据爆炸状态更新物体 ---
-            // 1. 更新照片位置 (Lerp between origin and target)
+            // 更新照片位置和朝向
             photoMeshes.forEach(mesh => {
                 mesh.position.lerpVectors(mesh.userData.originPos, mesh.userData.targetPos, explodeState);
-                // 爆炸时让照片面向摄像机，收缩时回原角度
                 if (explodeState > 0.1) {
-                    mesh.lookAt(camera.position);
+                    mesh.lookAt(camera.position); // 展开时面向相机
                 } else {
-                    // 简单插值回原始旋转 (简化处理，完美插值四元数较复杂，这里近似)
                     mesh.rotation.x = THREE.MathUtils.lerp(mesh.rotation.x, mesh.userData.originRot.x, dt*5);
                     mesh.rotation.y = THREE.MathUtils.lerp(mesh.rotation.y, mesh.userData.originRot.y, dt*5);
                     mesh.rotation.z = THREE.MathUtils.lerp(mesh.rotation.z, mesh.userData.originRot.z, dt*5);
                 }
             });
 
-            // 2. 更新爱心可见性
-            if (this.heartGeo) {
-                const opacities = this.heartGeo.attributes.aOpacityBoost.array;
-                for(let i=0; i<opacities.length; i++) {
-                    // 爆炸状态越高，可见度越高
-                    opacities[i] = THREE.MathUtils.smoothstep(0.2, 0.8, explodeState); 
-                }
-                this.heartGeo.attributes.aOpacityBoost.needsUpdate = true;
-            }
-
-            // 闪光逻辑 (保持不变)
             fTime += 0.016;
             if(fTime>nFlash) { uniforms.uFlash.value=1; if(boltUniforms)boltUniforms.uFlash.value=1; if(heartUniforms)heartUniforms.uFlash.value=1; fTime=0; nFlash=Math.random()*5+3; bloomPass.strength=1.5; }
             uniforms.uFlash.value *= 0.9; if(boltUniforms)boltUniforms.uFlash.value*=0.9; if(heartUniforms)heartUniforms.uFlash.value*=0.9;
-            bloomPass.strength = THREE.MathUtils.lerp(bloomPass.strength, 0.6, 0.1);
+            bloomPass.strength = THREE.MathUtils.lerp(bloomPass.strength, 0.5, 0.1);
 
             controls.update(); composer.render();
         }
