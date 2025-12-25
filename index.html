@@ -3,56 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Merry Christmas, Jane! - Full Love Edition</title>
+    <title>Merry Christmas, Jane! - Luxury Ribbon Edition</title>
     <link href="https://fonts.loli.net/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Cinzel', serif; touch-action: none; }
+        body { margin: 0; overflow: hidden; background-color: #020001; font-family: 'Cinzel', serif; touch-action: none; }
         
-        /* Loading Screen - 淡粉色系 */
+        /* Loading Screen - 奢华粉金 */
         #loading-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: #050002; 
+            background: linear-gradient(135deg, #1a0005 0%, #000000 100%);
             z-index: 100; display: flex; flex-direction: column; 
-            justify-content: center; align-items: center; color: #FFB6C1; 
+            justify-content: center; align-items: center; color: #FF69B4; 
             transition: opacity 1.2s ease-in-out;
             padding: 20px; box-sizing: border-box; text-align: center;
         }
 
         .loader-ring {
-            display: inline-block; width: 50px; height: 50px;
-            border: 3px solid rgba(255,182,193,0.3); border-top-color: #FFB6C1; border-radius: 50%;
+            display: inline-block; width: 60px; height: 60px;
+            border: 4px solid rgba(255,105,180,0.2); border-top-color: #FF1493; border-radius: 50%;
             animation: spin 0.8s infinite linear; margin-bottom: 30px;
-            box-shadow: 0 0 25px rgba(255, 182, 193, 0.4);
+            box-shadow: 0 0 30px rgba(255, 20, 147, 0.5);
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         
         .loading-status { font-size: 14px; letter-spacing: 3px; color: rgba(255,255,255,0.8); margin-bottom: 20px; font-style: italic;}
         
         #btn-enter {
-            padding: 18px 60px; border: 2px solid #FFB6C1; 
-            background: linear-gradient(135deg, rgba(255,182,193,0.2) 0%, rgba(0,0,0,0.9) 100%);
-            color: #FFB6C1; font-size: 18px; font-weight: bold; cursor: pointer; 
-            display: none; box-shadow: 0 0 30px rgba(255, 182, 193, 0.5), inset 0 0 10px #FFB6C1;
+            padding: 20px 70px; border: 2px solid #FF1493; 
+            background: linear-gradient(135deg, rgba(255,20,147,0.3) 0%, rgba(0,0,0,0.8) 100%);
+            color: #FF69B4; font-size: 18px; font-weight: bold; cursor: pointer; 
+            display: none; box-shadow: 0 0 40px rgba(255, 20, 147, 0.6), inset 0 0 15px #FF1493;
             text-transform: uppercase; letter-spacing: 4px; transition: all 0.3s;
-            margin-bottom: 30px;
+            margin-bottom: 30px; text-shadow: 0 0 10px rgba(255,105,180,0.8);
         }
-        #btn-enter:active { transform: scale(0.96); box-shadow: 0 0 15px #FFB6C1; }
+        #btn-enter:active { transform: scale(0.96); box-shadow: 0 0 20px #FF1493; }
 
         .sub-message {
             font-size: 14px; letter-spacing: 2px; color: rgba(255, 182, 193, 0.95); 
-            line-height: 2; margin-top: 15px; text-shadow: 0 0 8px rgba(255,182,193,0.4);
+            line-height: 2; margin-top: 15px; text-shadow: 0 0 10px rgba(255,20,147,0.5);
             text-transform: none; display: none;
         }
         .from-ivan-line {
             font-size: 16px; letter-spacing: 4px; display: block; margin-top: 15px;
-            text-transform: lowercase; font-weight: bold;
+            text-transform: lowercase; font-weight: bold; color: #FF69B4;
         }
 
         #canvas-container { position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 1.5s; }
         #tips {
             position: absolute; bottom: 30px; width: 100%; text-align: center;
-            color: rgba(255,182,193,0.6); font-size: 11px; pointer-events: none; z-index: 10; letter-spacing: 2px;
-            text-shadow: 0 0 5px #000;
+            color: rgba(255,182,193,0.7); font-size: 11px; pointer-events: none; z-index: 10; letter-spacing: 3px;
+            text-shadow: 0 0 8px #FF1493; font-weight: bold;
         }
         #error-msg { position: absolute; bottom: 70px; color: #ff5555; font-size: 12px; display: none; letter-spacing: 1px;}
     </style>
@@ -69,9 +69,9 @@
 <body>
 
     <div id="loading-screen">
-        <div style="font-size: 28px; margin-bottom: 40px; letter-spacing: 6px; text-shadow: 0 0 20px rgba(255,182,193,0.6);">FOR JANE</div>
+        <div style="font-size: 28px; margin-bottom: 40px; letter-spacing: 6px; text-shadow: 0 0 25px rgba(255,20,147,0.7);">FOR JANE</div>
         <div class="loader-ring" id="spinner"></div>
-        <div class="loading-status" id="loading-text">Preparing Surprise...</div>
+        <div class="loading-status" id="loading-text">Weaving Luxury Ribbons…</div>
         
         <button id="btn-enter" onclick="startExperience()">OPEN GIFT</button>
         
@@ -84,7 +84,7 @@
     </div>
 
     <div id="canvas-container"></div>
-    <div id="tips">Hold & Drag to explore Starfield • Release to reform Spiral</div>
+    <div id="tips">Hold & Drag to release the Starfield • Release to reform</div>
 
     <script>
         setTimeout(() => {
@@ -105,91 +105,57 @@
         attribute float aScale; attribute vec3 aColor; 
         attribute vec3 aRandomDir; attribute float aRandomDist;
         attribute float aIndexOffset;
-
-        varying vec3 vColor; varying float vIndexOffset; varying float vOpacity; 
-        varying float vY; 
-
+        varying vec3 vColor; varying float vIndexOffset; varying float vOpacity; varying float vY; 
         void main() {
-            vColor = aColor; vIndexOffset = aIndexOffset;
-            vec3 pos = position;
-            vY = pos.y; 
-
-            // 旋转
-            float rotFactor = smoothstep(0.8, 0.0, uExplodeState);
-            float angle = uTime * 0.3 * rotFactor; 
-            float s = sin(angle); float c = cos(angle);
-            float x = pos.x * c - pos.z * s; float z = pos.x * s + pos.z * c; pos.x = x; pos.z = z;
-            
-            // 爆炸
-            float explodeFactor = smoothstep(0.0, 1.0, uExplodeState) * 45.0; 
+            vColor = aColor; vIndexOffset = aIndexOffset; vec3 pos = position; vY = pos.y; 
+            // 粒子在爆炸时才出现，平时隐藏在树里
+            float explodeFactor = smoothstep(0.0, 1.0, uExplodeState) * 50.0; 
             pos += aRandomDir * explodeFactor * aRandomDist;
+            // 基础旋转
+            float angle = uTime * 0.1; float s=sin(angle); float c=cos(angle);
+            float x=pos.x*c - pos.z*s; float z=pos.x*s + pos.z*c; pos.x=x; pos.z=z;
 
             float beatScale = 1.0 + uBeat * 0.3 + uFlash * 0.2;
             vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
             gl_Position = projectionMatrix * mvPosition;
-            
-            float depthScale = 400.0 / -mvPosition.z; 
-            float starSize = mix(1.0, 0.8, uExplodeState); 
-            
-            gl_PointSize = ((4.5 + uFlash * 3.0) * aScale * beatScale * starSize) * depthScale;
-            vOpacity = step(0.7, sin(uTime * 25.0 + aIndexOffset * 10.0)); 
+            float depthScale = 500.0 / -mvPosition.z; 
+            gl_PointSize = ((3.0 + uFlash * 3.0) * aScale * beatScale) * depthScale * uExplodeState; // 爆炸时才显示大小
+            vOpacity = step(0.7, sin(uTime * 25.0 + aIndexOffset * 10.0)) * uExplodeState; 
         }
     </script>
-
     <script type="x-shader/x-fragment" id="particleFragment">
-        varying vec3 vColor; varying float vY; 
-        uniform float uFlash;
+        varying vec3 vColor; varying float vY; uniform float uFlash;
         void main() {
-            float dist = length(gl_PointCoord.xy - 0.5);
-            if(dist > 0.5) discard;
-            
+            float dist = length(gl_PointCoord.xy - 0.5); if(dist > 0.5) discard;
             float core = pow(1.0 - dist * 2.0, 8.0);
-
-            // 透明度渐变
-            float alphaFade = smoothstep(-14.0, 8.0, vY);
-            alphaFade = alphaFade * 0.9 + 0.1;
-
-            vec3 finalColor = vColor * core * 3.0; 
+            vec3 finalColor = vColor * core * 4.0; 
             finalColor = mix(finalColor, vec3(3.0), uFlash * 0.5);
-            
-            finalColor *= alphaFade;
-
             gl_FragColor = vec4(finalColor, 1.0);
         }
     </script>
-
     <script type="x-shader/x-fragment" id="textureFragment">
         uniform sampler2D uTexture; uniform float uTime; 
         varying float vIndexOffset; varying vec3 vColor; varying float vOpacity;
         float random(vec2 st) { return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123); }
         void main() {
-            vec4 texColor = texture2D(uTexture, gl_PointCoord);
-            if(texColor.a < 0.1) discard;
-            float noise = random(vec2(uTime * 8.0, vIndexOffset));
-            float flash = step(0.80, noise);
-            gl_FragColor = vec4(vColor * (0.8 + flash*0.5), texColor.a * vOpacity);
+            vec4 texColor = texture2D(uTexture, gl_PointCoord); if(texColor.a < 0.1) discard;
+            float noise = random(vec2(uTime * 8.0, vIndexOffset)); float flash = step(0.80, noise);
+            gl_FragColor = vec4(vColor * (1.0 + flash*0.8), texColor.a * vOpacity);
         }
     </script>
-
     <script type="x-shader/x-fragment" id="photoFragment">
         uniform sampler2D tDiffuse; uniform float uTime; uniform float uFlash; varying vec2 vUv;
         void main() {
             vec4 tex = texture2D(tDiffuse, vUv);
-            vec2 d = min(vUv, 1.0 - vUv);
-            float borderDist = min(d.x, d.y);
-            if (borderDist < 0.02) {
-                // 粉色光边
-                float shine = sin(vUv.x*15.0 - uTime*5.0)*0.5 + 0.5;
-                gl_FragColor = vec4(1.0, 0.7, 0.8, 1.0) * (0.6 + shine * 0.8);
-            } else {
-                gl_FragColor = vec4(tex.rgb, 1.0);
-            }
+            vec2 d = min(vUv, 1.0 - vUv); float borderDist = min(d.x, d.y);
+            if (borderDist < 0.03) {
+                float shine = sin(vUv.x*20.0 - uTime*8.0)*0.5 + 0.5;
+                gl_FragColor = vec4(1.0, 0.4, 0.7, 1.0) * (1.0 + shine * 1.5); // 更亮的粉色边框
+            } else { gl_FragColor = vec4(tex.rgb, 1.0); }
         }
     </script>
 
-
     <script>
-        // 【重要修改】将最大照片数改为 7
         const config = { musicPath: './music.mp3', maxPhotos: 7 }; 
 
         const btn = document.getElementById('btn-enter');
@@ -203,7 +169,7 @@
             btn.style.display = 'block';
             subMessage.style.display = 'block';
         }
-        setTimeout(showEnterButton, 4000);
+        setTimeout(showEnterButton, 5000); // 给材质加载多留点时间
 
         let scene, camera, renderer, composer, controls, analyser, clock;
         let uniforms = { uTime: {value:0}, uBeat: {value:0}, uFlash: {value:0}, uExplodeState: {value:0} };
@@ -212,6 +178,7 @@
         let loadedAudio = null;
         let loadedTextures = [];
         let photoMeshes = [];
+        let ribbonMeshes = []; // 存储丝带 Mesh
 
         function createEmojiTexture(emoji, size) {
             const canvas = document.createElement('canvas'); canvas.width = size; canvas.height = size;
@@ -259,48 +226,45 @@
             }
         }
 
-        // --- 【新功能】创建单个文字平面的辅助函数 ---
-        function createSingleTextPlane(textLines, position, rotationEuler) {
+        function createSingleTextPlane(textLines, position, rotationEuler, scale = 1.0) {
             const canvas = document.createElement('canvas');
-            canvas.width = 1024; canvas.height = 256; // 足够宽
+            canvas.width = 1024; canvas.height = 256; 
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#FFB6C1'; // 淡粉色文字
-            ctx.font = 'bold 32px Cinzel'; 
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-
+            // 更亮的粉色文字，带发光描边
+            ctx.shadowColor = "#FF1493"; ctx.shadowBlur = 15;
+            ctx.fillStyle = '#FFB6C1'; 
+            ctx.font = 'bold 36px Cinzel'; 
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             const lines = Array.isArray(textLines) ? textLines : [textLines];
-            const lineHeight = 40;
+            const lineHeight = 45;
             const startY = (canvas.height - (lines.length - 1) * lineHeight) / 2;
-            lines.forEach((line, index) => {
-                ctx.fillText(line, canvas.width / 2, startY + index * lineHeight);
-            });
-
-            const tex = new THREE.CanvasTexture(canvas);
-            tex.needsUpdate = true;
-            // 半透明，不写入深度，避免遮挡
-            const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.6, side: THREE.DoubleSide, depthWrite: false });
-            const geo = new THREE.PlaneGeometry(20, 5);
+            lines.forEach((line, index) => { ctx.fillText(line, canvas.width / 2, startY + index * lineHeight); });
+            const tex = new THREE.CanvasTexture(canvas); tex.needsUpdate = true;
+            // 使用 Basic 材质确保文字始终高亮，不受光照影响
+            const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
+            const geo = new THREE.PlaneGeometry(20 * scale, 5 * scale);
             const mesh = new THREE.Mesh(geo, mat);
             mesh.position.copy(position);
             if (rotationEuler) mesh.rotation.copy(rotationEuler);
             scene.add(mesh);
         }
 
-        // --- 创建五角星几何体 ---
-        function createStarGeometry(outerRadius, innerRadius, thickness) {
+        // --- 【修复】创建真正站立的五角星 ---
+        function createStandingStarGeometry(outerRadius, innerRadius, thickness) {
             const shape = new THREE.Shape();
             const points = 5;
             for (let i = 0; i < points * 2; i++) {
                 const l = i % 2 === 1 ? innerRadius : outerRadius;
-                const a = (i / points) * Math.PI + Math.PI/2; 
+                // 调整角度起始点，让一个角垂直向上
+                const a = (i / points) * Math.PI - Math.PI / 2; 
+                // 在 XY 平面绘制
                 if (i===0) shape.moveTo(Math.cos(a) * l, Math.sin(a) * l);
                 else shape.lineTo(Math.cos(a) * l, Math.sin(a) * l);
             }
             shape.closePath();
-            const extrudeSettings = { depth: thickness, bevelEnabled: true, bevelThickness: 0.1, bevelSize: 0.1, bevelSegments: 1 };
+            const extrudeSettings = { depth: thickness, bevelEnabled: true, bevelThickness: 0.2, bevelSize: 0.1, bevelSegments: 3 };
             const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-            geo.center();
+            geo.center(); // 居中
             return geo;
         }
 
@@ -309,125 +273,172 @@
             clock = new THREE.Clock();
             renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 3)); 
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.5)); // 稍微降低一点分辨率以平衡性能和画质
+            // 使用电影感 Tone Mapping
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 1.0;
+            renderer.toneMappingExposure = 0.9; 
+            // 开启物理光照计算
+            renderer.physicallyCorrectLights = true;
+            renderer.outputEncoding = THREE.sRGBEncoding;
             container.appendChild(renderer.domElement);
 
             scene = new THREE.Scene(); 
-            scene.fog = new THREE.FogExp2(0x050002, 0.015); 
+            scene.fog = new THREE.FogExp2(0x0a0005, 0.02); // 深粉紫色雾气
             
             camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000); 
-            camera.position.set(0, 5, 40);
+            camera.position.set(0, 6, 45); 
             
             controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enableDamping=true; controls.dampingFactor = 0.08;
-            controls.autoRotate=true; controls.autoRotateSpeed=0.5; 
+            controls.enableDamping=true; controls.dampingFactor = 0.05;
+            controls.autoRotate=true; controls.autoRotateSpeed=0.8; // 加快自转
             controls.enableZoom=false; controls.enablePan = false; 
 
+            // --- 电影级辉光设置 (Trumpian Style) ---
             bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-            bloomPass.threshold=0.98; bloomPass.strength=0.6; bloomPass.radius=0.1;    
+            // 降低阈值，让更多粉色发光
+            bloomPass.threshold = 0.15; 
+            // 极大提高强度，制造奢华感
+            bloomPass.strength = 2.8;   
+            // 增加半径，制造柔焦梦幻感
+            bloomPass.radius = 0.9;    
             composer = new THREE.EffectComposer(renderer); 
             composer.addPass(new THREE.RenderPass(scene, camera)); 
             composer.addPass(bloomPass);
 
-            // --- 【新功能】添加分散的背景文字 ---
-            // 1. 原来的大标题 (后上方)
-            createSingleTextPlane(['FOR JANE, MERRY CHRISTMAS,', 'LOVE YOU, WANT YOU'], new THREE.Vector3(0, 8, -15));
-            // 2. 第三个圣诞 (左下方)
-            createSingleTextPlane('这是我们在一起的第三个圣诞', new THREE.Vector3(-12, -8, -10), new THREE.Euler(0, 0.2, 0));
-            // 3. 开心快乐 (右上方)
-            createSingleTextPlane(['希望我们继续开心,', '快乐,健康,向上'], new THREE.Vector3(12, 10, -12), new THREE.Euler(0, -0.3, 0));
-            // 4. 初见心动 (左侧中前方)
-            createSingleTextPlane('继续初见时的心动💓', new THREE.Vector3(-14, 2, -5), new THREE.Euler(0, 0.4, 0));
-            // 5. 离不开我 (右下方近处)
-            createSingleTextPlane('继续离不开我', new THREE.Vector3(10, -5, -8), new THREE.Euler(0, -0.2, 0));
+            // --- 奢华灯光系统 ---
+            const ambientLight = new THREE.AmbientLight(0xFF69B4, 1.5); // 强粉色环境光
+            scene.add(ambientLight);
+            
+            // 主光源 (金色+粉色)
+            const mainLight = new THREE.DirectionalLight(0xFFD700, 3.0);
+            mainLight.position.set(10, 20, 10);
+            scene.add(mainLight);
+
+            // 补光 (深粉色，增加侧面质感)
+            const rimLight = new THREE.SpotLight(0xFF1493, 5.0);
+            rimLight.position.set(-15, 10, -5);
+            rimLight.lookAt(0,0,0);
+            scene.add(rimLight);
+            
+            // 底部向上打光
+            const bottomLight = new THREE.PointLight(0xFF69B4, 3.0, 30);
+            bottomLight.position.set(0, -15, 0);
+            scene.add(bottomLight);
+
+            // --- 背景文字 (保持不变) ---
+            createSingleTextPlane(['FOR JANE, MERRY CHRISTMAS,', 'LOVE YOU, WANT YOU'], new THREE.Vector3(0, 9, -16), null, 1.2);
+            createSingleTextPlane('这是我们在一起的第三个圣诞', new THREE.Vector3(-13, -7, -12), new THREE.Euler(0, 0.25, 0));
+            createSingleTextPlane(['希望我们继续开心,', '快乐,健康,向上'], new THREE.Vector3(13, 11, -12), new THREE.Euler(0, -0.35, 0));
+            createSingleTextPlane('继续初见时的心动💓', new THREE.Vector3(-15, 3, -8), new THREE.Euler(0, 0.4, 0.1));
+            createSingleTextPlane('继续离不开我', new THREE.Vector3(11, -4, -10), new THREE.Euler(0, -0.25, -0.05));
 
 
-            // --- 1. 主体粒子树 (粉色螺旋 - 通透) ---
-            const treeGeo = new THREE.BufferGeometry();
-            const maxP = 9000; 
+            // --- 1. 【核心重构】奢华宽带丝绸圣诞树 ---
+            // 创建 5 条螺旋路径
+            const numRibbons = 5;
+            const ribbonHeight = 26;
+            const ribbonRadius = 14;
+            
+            // 奢华物理材质 (Trumpian Pink Gold)
+            const ribbonMat = new THREE.MeshPhysicalMaterial({
+                color: 0xFF69B4,      // HotPink 基色
+                emissive: 0x550022,   // 深粉色自发光
+                emissiveIntensity: 0.8,
+                metalness: 0.9,       // 高金属感
+                roughness: 0.15,      // 极其光滑，高反射
+                clearcoat: 1.0,       // 清漆层，增加奢华光泽
+                clearcoatRoughness: 0.1,
+                side: THREE.DoubleSide, // 双面渲染
+                flatShading: false    // 平滑着色
+            });
+
+            for (let r = 0; r < numRibbons; r++) {
+                const points = [];
+                const offsetPhase = (r / numRibbons) * Math.PI * 2; // 每条带子的相位偏移
+                for (let i = 0; i <= 100; i++) {
+                    const t = i / 100;
+                    const y = THREE.MathUtils.lerp(-ribbonHeight/2, ribbonHeight/2, t);
+                    // 半径随高度减小 (圆锥形)
+                    const currentRadius = (1 - t) * ribbonRadius + 0.5;
+                    // 螺旋角度 (增加圈数)
+                    const angle = t * Math.PI * 12 + offsetPhase; 
+                    points.push(new THREE.Vector3(Math.cos(angle) * currentRadius, y, Math.sin(angle) * currentRadius));
+                }
+                const path = new THREE.CatmullRomCurve3(points);
+                // 使用 TubeGeometry 创建宽带，径向分段少一点以实现“扁平”感
+                const tubeGeo = new THREE.TubeGeometry(path, 150, 1.2, 3, false); 
+                const mesh = new THREE.Mesh(tubeGeo, ribbonMat);
+                
+                // 记录原始状态用于爆炸交互
+                mesh.userData.originScale = mesh.scale.clone();
+                mesh.userData.randomDir = new THREE.Vector3(Math.random()-0.5, Math.random()*0.5, Math.random()-0.5).normalize();
+
+                // 【关键】压扁 Tube 形成带状
+                mesh.scale.set(1, 0.1, 1); 
+                
+                scene.add(mesh);
+                ribbonMeshes.push(mesh);
+            }
+
+            // --- 2. 爆炸时才出现的粒子 (星空/闪电/爱心) ---
+            // 仅在 uExplodeState > 0 时可见 (通过 Vertex Shader 控制)
+            const particleGeo = new THREE.BufferGeometry();
+            const maxP = 8000; // 粒子数量
             const pos = new Float32Array(maxP*3), scale = new Float32Array(maxP), col = new Float32Array(maxP*3);
             const rDir = new Float32Array(maxP*3), rDist = new Float32Array(maxP), offset = new Float32Array(maxP);
-            
-            let p=0, s=0, c=0, rd=0, rdi=0, off=0;
-            for(let i=0; i<maxP; i++) {
-                const y = Math.random() * 22 - 11; 
-                const coneR = (1 - (y + 11) / 22) * 15; 
-                const spiralAngle = y * 7.7 + (Math.random() - 0.5) * 1.0; 
-                pos[p++]=Math.cos(spiralAngle)*coneR; pos[p++]=y; pos[p++]=Math.sin(spiralAngle)*coneR;
-                scale[s++]=Math.random()*0.8+0.3; 
-                const tone = Math.random() * 0.3 + 0.7; col[c++] = tone; col[c++] = tone * 0.7; col[c++] = tone * 0.8; 
+            let p=0,s=0,c=0,rd=0,rdi=0,off=0;
+            for(let i=0; i<maxP;i++){
+                pos[p++]=0; pos[p++]=0; pos[p++]=0; // 初始都在中心
+                scale[s++]=Math.random()*0.8+0.4;
+                const tone = Math.random()*0.3+0.7; col[c++]=tone; col[c++]=tone*0.6; col[c++]=tone*0.7; // 粉色系
                 const theta=Math.random()*Math.PI*2; const phi=Math.acos(2*Math.random()-1);
                 rDir[rd++]=Math.sin(phi)*Math.cos(theta); rDir[rd++]=Math.sin(phi)*Math.sin(theta); rDir[rd++]=Math.cos(phi);
-                rDist[rdi++]=Math.random()*3.0+1.0; offset[off++]=Math.random()*100;
+                rDist[rdi++]=Math.random()*30.0+10.0; // 爆炸范围极大
+                offset[off++]=Math.random()*100;
             }
-            treeGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-            treeGeo.setAttribute('aScale', new THREE.BufferAttribute(scale, 1));
-            treeGeo.setAttribute('aColor', new THREE.BufferAttribute(col, 3));
-            treeGeo.setAttribute('aRandomDir', new THREE.BufferAttribute(rDir, 3));
-            treeGeo.setAttribute('aRandomDist', new THREE.BufferAttribute(rDist, 1));
-            treeGeo.setAttribute('aIndexOffset', new THREE.BufferAttribute(offset, 1));
-            const treeMat = new THREE.ShaderMaterial({ uniforms: uniforms, vertexShader: document.getElementById('commonVertex').textContent, fragmentShader: document.getElementById('particleFragment').textContent, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true });
-            scene.add(new THREE.Points(treeGeo, treeMat));
+            particleGeo.setAttribute('position', new THREE.BufferAttribute(pos,3)); particleGeo.setAttribute('aScale', new THREE.BufferAttribute(scale,1)); particleGeo.setAttribute('aColor', new THREE.BufferAttribute(col,3)); particleGeo.setAttribute('aRandomDir', new THREE.BufferAttribute(rDir,3)); particleGeo.setAttribute('aRandomDist', new THREE.BufferAttribute(rDist,1)); particleGeo.setAttribute('aIndexOffset', new THREE.BufferAttribute(offset,1));
+            const particleMat = new THREE.ShaderMaterial({ uniforms: uniforms, vertexShader: document.getElementById('commonVertex').textContent, fragmentShader: document.getElementById('particleFragment').textContent, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true });
+            scene.add(new THREE.Points(particleGeo, particleMat));
 
-            // --- 2. 闪电⚡️ (粉色) ---
-            const boltGeo = new THREE.BufferGeometry();
-            setupTextureParticles(boltGeo, 400, 1.2, new THREE.Vector3(1.0, 0.8, 0.9), true); 
-            boltUniforms = THREE.UniformsUtils.clone(uniforms);
-            boltUniforms.uTexture = { value: boltTexture };
-            const boltMat = new THREE.ShaderMaterial({ uniforms: boltUniforms, vertexShader: document.getElementById('commonVertex').textContent, fragmentShader: document.getElementById('textureFragment').textContent, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true });
-            scene.add(new THREE.Points(boltGeo, boltMat));
-            
-            // --- 3. 爱心💖 (粉色) ---
-            const heartGeo = new THREE.BufferGeometry();
-            setupTextureParticles(heartGeo, 500, 0.9, new THREE.Vector3(1.0, 0.6, 0.7), false); 
-            heartUniforms = THREE.UniformsUtils.clone(uniforms);
-            heartUniforms.uTexture = { value: heartTexture };
-            const heartMat = new THREE.ShaderMaterial({
-                uniforms: heartUniforms,
-                vertexShader: document.getElementById('commonVertex').textContent,
-                fragmentShader: document.getElementById('textureFragment').textContent,
-                blending: THREE.AdditiveBlending, depthWrite: false, transparent: true
-            });
-            heartMat.onBeforeCompile = (shader) => {
-                shader.vertexShader = shader.vertexShader.replace('void main() {', 'varying float vOpacityBoost; void main() { vOpacityBoost = smoothstep(0.2, 0.8, uExplodeState);');
-                shader.fragmentShader = shader.fragmentShader.replace('void main() {', 'varying float vOpacityBoost; void main() {');
-                shader.fragmentShader = shader.fragmentShader.replace('texColor.a * vOpacity);', 'texColor.a * vOpacity * vOpacityBoost);');
-            };
-            scene.add(new THREE.Points(heartGeo, heartMat));
+            // 纹理粒子 (闪电/爱心) 同样处理
+            const boltGeo = new THREE.BufferGeometry(); setupTextureParticles(boltGeo, 400, 1.5, new THREE.Vector3(1.0, 0.8, 0.9));
+            boltUniforms = THREE.UniformsUtils.clone(uniforms); boltUniforms.uTexture = { value: boltTexture };
+            scene.add(new THREE.Points(boltGeo, new THREE.ShaderMaterial({ uniforms: boltUniforms, vertexShader: document.getElementById('commonVertex').textContent, fragmentShader: document.getElementById('textureFragment').textContent, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true })));
+            const heartGeo = new THREE.BufferGeometry(); setupTextureParticles(heartGeo, 500, 1.2, new THREE.Vector3(1.0, 0.5, 0.7));
+            heartUniforms = THREE.UniformsUtils.clone(uniforms); heartUniforms.uTexture = { value: heartTexture };
+            scene.add(new THREE.Points(heartGeo, new THREE.ShaderMaterial({ uniforms: heartUniforms, vertexShader: document.getElementById('commonVertex').textContent, fragmentShader: document.getElementById('textureFragment').textContent, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true })));
 
             // --- 4. 照片墙 (7张) ---
             const pMat = new THREE.ShaderMaterial({ uniforms: {tDiffuse:{value:null}, uTime:uniforms.uTime, uFlash:uniforms.uFlash}, vertexShader: `varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix * modelViewMatrix * vec4(position,1.0);}`, fragmentShader: document.getElementById('photoFragment').textContent, side: THREE.DoubleSide, transparent: false, depthWrite: true });
             loadedTextures.forEach((tex, i) => {
                 const asp = tex.image.width/tex.image.height; const m = pMat.clone(); m.uniforms.tDiffuse.value=tex; m.uniforms.uFlash=uniforms.uFlash;
-                const mesh = new THREE.Mesh(new THREE.PlaneGeometry(3.5*asp, 3.5), m);
-                // 分布 7 张照片
-                const y=(Math.random()*18)-9, r=(1-(y+12)/26)*14+3.0, a=(i/loadedTextures.length)*6.28+Math.random()*0.5;
+                const mesh = new THREE.Mesh(new THREE.PlaneGeometry(3.8*asp, 3.8), m);
+                const y=(Math.random()*20)-10, r=(1-(y+12)/28)*15+3.0, a=(i/loadedTextures.length)*6.28+Math.random()*0.5;
                 mesh.userData.originPos = new THREE.Vector3(Math.cos(a)*r, y, Math.sin(a)*r);
-                mesh.userData.targetPos = new THREE.Vector3((Math.random()-0.5)*14, (Math.random()-0.5)*12, (Math.random()*10) + 12);
+                mesh.userData.targetPos = new THREE.Vector3((Math.random()-0.5)*16, (Math.random()-0.5)*14, (Math.random()*8) + 14);
                 mesh.position.copy(mesh.userData.originPos); mesh.lookAt(0,y,0); 
                 mesh.userData.originRot = mesh.rotation.clone();
                 scene.add(mesh); photoMeshes.push(mesh);
             });
             
-            // --- 5. 【修改点】顶部实体五角星 (立起来 + 淡粉发光) ---
-            const starGeo = createStarGeometry(2.0, 0.9, 0.6); // 稍微大一点
-            const starMat = new THREE.MeshStandardMaterial({ 
-                color: 0xFFB6C1, // LightPink (淡粉色)
-                emissive: 0xFFB6C1, // 自发光也是淡粉色
-                emissiveIntensity: 1.2, // 增强发光强度
-                metalness: 0.4,
-                roughness: 0.1
+            // --- 5. 【修改点】顶部实体五角星 (真正站立 + 淡粉高光) ---
+            // 使用新的站立几何体函数
+            const starGeo = createStandingStarGeometry(2.2, 1.0, 0.7); 
+            const starMat = new THREE.MeshPhysicalMaterial({ 
+                color: 0xFFC0CB, // Pink (淡粉色)
+                emissive: 0xFF69B4, // HotPink 自发光
+                emissiveIntensity: 2.5, // 极高自发光，像钻石灯
+                metalness: 1.0,
+                roughness: 0.05, // 极度光滑
+                clearcoat: 1.0
             });
             const topStar = new THREE.Mesh(starGeo, starMat);
-            topStar.position.set(0, 12.5, 0);
-            // 【关键修复】绕 X 轴旋转 -90度，让它立起来面向前方
-            topStar.rotation.x = -Math.PI / 2; 
+            topStar.position.set(0, 13.5, 0); // 位置更高一点
+            // 不再需要额外的旋转，几何体本身就是站立的
             
-            const starLight = new THREE.PointLight(0xFFB6C1, 2.5, 25); // 强淡粉色光
-            // 把光源稍微往前放一点，照亮星星正面
-            starLight.position.set(0, 12.5, 1.0);
+            // 顶部强光，照亮星星和树顶
+            const starLight = new THREE.PointLight(0xFF1493, 4.0, 30); 
+            starLight.position.set(0, 14.0, 2.0);
             scene.add(topStar); scene.add(starLight);
             this.topStar = topStar;
 
@@ -435,23 +446,16 @@
             animate();
         }
 
-        function setupTextureParticles(geo, count, scaleMult, colorVec, wideSpread) {
+        function setupTextureParticles(geo, count, scaleMult, colorVec) {
             const bPos=[], bScale=[], bCol=[], bRDir=[], bRDist=[], bOffset=[];
             for(let i=0; i<count; i++) {
-                 let x,y,z;
-                 if (wideSpread) { x=(Math.random()-0.5)*50; y=(Math.random()-0.5)*50; z=(Math.random()-0.5)*50; } 
-                 else { const r=Math.random()*15, a=Math.random()*6.28; x=Math.cos(a)*r; y=Math.random()*25-12; z=Math.sin(a)*r; }
-                 bPos.push(x,y,z); bScale.push((Math.random()*0.6 + 0.4)*scaleMult); bCol.push(colorVec.x, colorVec.y, colorVec.z);
+                 bPos.push(0,0,0); // 初始在中心
+                 bScale.push((Math.random()*0.6 + 0.4)*scaleMult); bCol.push(colorVec.x, colorVec.y, colorVec.z);
                  bOffset.push(Math.random() * 100.0);
-                 const theta=Math.random()*6.28; const phi=Math.acos(2*Math.random()-1);
-                 bRDir.push(Math.sin(phi)*Math.cos(theta), Math.sin(phi)*Math.sin(theta), Math.cos(phi)); bRDist.push(Math.random()*3.0 + 1.5);
+                 const theta=Math.random()*Math.PI*2; const phi=Math.acos(2*Math.random()-1);
+                 bRDir.push(Math.sin(phi)*Math.cos(theta), Math.sin(phi)*Math.sin(theta), Math.cos(phi)); bRDist.push(Math.random()*35.0 + 15.0);
             }
-            geo.setAttribute('position', new THREE.Float32BufferAttribute(bPos, 3));
-            geo.setAttribute('aScale', new THREE.Float32BufferAttribute(bScale, 1));
-            geo.setAttribute('aColor', new THREE.Float32BufferAttribute(bCol, 3));
-            geo.setAttribute('aRandomDir', new THREE.Float32BufferAttribute(bRDir, 3));
-            geo.setAttribute('aRandomDist', new THREE.Float32BufferAttribute(bRDist, 1));
-            geo.setAttribute('aIndexOffset', new THREE.Float32BufferAttribute(bOffset, 1));
+            geo.setAttribute('position', new THREE.Float32BufferAttribute(bPos, 3)); geo.setAttribute('aScale', new THREE.Float32BufferAttribute(bScale, 1)); geo.setAttribute('aColor', new THREE.Float32BufferAttribute(bCol, 3)); geo.setAttribute('aRandomDir', new THREE.Float32BufferAttribute(bRDir, 3)); geo.setAttribute('aRandomDist', new THREE.Float32BufferAttribute(bRDist, 1)); geo.setAttribute('aIndexOffset', new THREE.Float32BufferAttribute(bOffset, 1));
         }
 
         let isInteracting = false; let idleTimer = 0.0; let explodeState = 0.0; let targetExplodeState = 0.0;
@@ -473,16 +477,36 @@
             if(heartUniforms) heartUniforms.uTime.value = t;
             if(analyser) { const beat = analyser.getAverageFrequency()/255; uniforms.uBeat.value = beat; if(boltUniforms) boltUniforms.uBeat.value = beat; if(heartUniforms) heartUniforms.uBeat.value = beat; }
             
-            // 【修改点】让星星绕着自己的 Z 轴自转 (因为它已经绕X轴躺倒了)
-            if(this.topStar) this.topStar.rotation.z += dt * 1.5;
+            // 星星绕 Y 轴自转 (站立状态下)
+            if(this.topStar) this.topStar.rotation.y += dt * 1.2;
 
             if (isInteracting) { targetExplodeState = 1.0; } else { idleTimer += dt; if (idleTimer > 2.5) targetExplodeState = 0.0; }
-            const lerpSpeed = targetExplodeState > explodeState ? dt * 4.0 : dt * 1.5; 
+            const lerpSpeed = targetExplodeState > explodeState ? dt * 3.0 : dt * 1.0; 
             explodeState = THREE.MathUtils.lerp(explodeState, targetExplodeState, lerpSpeed);
             
             uniforms.uExplodeState.value = explodeState;
             if(boltUniforms) boltUniforms.uExplodeState.value = explodeState;
             if(heartUniforms) heartUniforms.uExplodeState.value = explodeState;
+
+            // --- 实体丝带树的爆炸动画 ---
+            ribbonMeshes.forEach(mesh => {
+                // 爆炸时向外飞散并随机旋转
+                if (explodeState > 0.01) {
+                    const explodeDir = mesh.userData.randomDir;
+                    mesh.position.x = explodeDir.x * explodeState * 30.0;
+                    mesh.position.y = explodeDir.y * explodeState * 30.0;
+                    mesh.position.z = explodeDir.z * explodeState * 30.0;
+                    mesh.rotation.x += dt * explodeDir.x;
+                    mesh.rotation.y += dt * explodeDir.y;
+                } else {
+                    // 归位
+                    mesh.position.set(0,0,0);
+                    mesh.rotation.set(0,0,0);
+                }
+                // 爆炸时逐渐透明消失，让位于粒子星空
+                mesh.material.opacity = 1.0 - explodeState;
+                mesh.material.transparent = true; 
+            });
 
             photoMeshes.forEach(mesh => {
                 mesh.position.lerpVectors(mesh.userData.originPos, mesh.userData.targetPos, explodeState);
@@ -494,9 +518,11 @@
             });
 
             fTime += 0.016;
-            if(fTime>nFlash) { uniforms.uFlash.value=1; if(boltUniforms)boltUniforms.uFlash.value=1; if(heartUniforms)heartUniforms.uFlash.value=1; fTime=0; nFlash=Math.random()*5+3; bloomPass.strength=1.5; }
+            // 爆炸时辉光更强
+            const targetStrength = 2.8 + explodeState * 1.5;
+            if(fTime>nFlash) { uniforms.uFlash.value=1; if(boltUniforms)boltUniforms.uFlash.value=1; if(heartUniforms)heartUniforms.uFlash.value=1; fTime=0; nFlash=Math.random()*5+3; bloomPass.strength = targetStrength + 1.0; }
             uniforms.uFlash.value *= 0.9; if(boltUniforms)boltUniforms.uFlash.value*=0.9; if(heartUniforms)heartUniforms.uFlash.value*=0.9;
-            bloomPass.strength = THREE.MathUtils.lerp(bloomPass.strength, 0.5, 0.1);
+            bloomPass.strength = THREE.MathUtils.lerp(bloomPass.strength, targetStrength, 0.1);
 
             controls.update(); composer.render();
         }
