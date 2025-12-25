@@ -51,6 +51,9 @@
             position: absolute; bottom: 20px; width: 100%; text-align: center;
             color: rgba(255,255,255,0.3); font-size: 10px; pointer-events: none; z-index: 10;
         }
+        
+        /* Error message style */
+        #error-msg { position: absolute; bottom: 50px; color: red; font-size: 10px; display: none; }
     </style>
 </head>
 <body>
@@ -62,10 +65,24 @@
         <div class="loader-ring" id="spinner"></div>
         <div id="loading-text">PREPARING SURPRISE...</div>
         <button id="btn-enter">OPEN GIFT ⚡️</button>
+        <div id="error-msg">Network Slow... Please Wait</div>
     </div>
 
     <div id="canvas-container"></div>
     <div id="tips">Swipe to Rotate • Tap Photo to Zoom</div>
+
+    <script>
+        setTimeout(() => {
+            const btn = document.getElementById('btn-enter');
+            if(getComputedStyle(btn).display === 'none') {
+                document.getElementById('error-msg').style.display = 'block';
+                // 强制尝试显示按钮
+                document.getElementById('spinner').style.display = 'none';
+                document.getElementById('loading-text').style.display = 'none';
+                btn.style.display = 'block';
+            }
+        }, 5000);
+    </script>
 
     <script type="x-shader/x-vertex" id="particleVertex">
         uniform float uTime; uniform float uBeat; uniform float uFlash;
@@ -111,11 +128,11 @@
     </script>
 
     <script type="module">
-        import * as THREE from 'https://unpkg.com/three@0.128.0/build/three.module.js';
-        import { OrbitControls } from 'https://unpkg.com/three@0.128.0/examples/jsm/controls/OrbitControls.js';
-        import { EffectComposer } from 'https://unpkg.com/three@0.128.0/examples/jsm/postprocessing/EffectComposer.js';
-        import { RenderPass } from 'https://unpkg.com/three@0.128.0/examples/jsm/postprocessing/RenderPass.js';
-        import { UnrealBloomPass } from 'https://unpkg.com/three@0.128.0/examples/jsm/postprocessing/UnrealBloomPass.js';
+        import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js';
+        import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/controls/OrbitControls.js';
+        import { EffectComposer } from 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/postprocessing/UnrealBloomPass.js';
 
         // --- 配置 ---
         const config = {
@@ -123,18 +140,18 @@
             maxPhotos: 30
         };
 
-        // --- 强制防卡死逻辑 ---
         const btn = document.getElementById('btn-enter');
         const spinner = document.getElementById('spinner');
         const loadingText = document.getElementById('loading-text');
 
+        // 显示按钮的函数
         function showEnterButton() {
             spinner.style.display = 'none';
             loadingText.style.display = 'none';
             btn.style.display = 'block';
         }
 
-        // 3秒后无论加载是否完成，强制显示按钮 (Fail-safe)
+        // 3秒后无论如何都显示按钮
         setTimeout(showEnterButton, 3000);
 
         // --- 加载器 ---
@@ -145,7 +162,7 @@
         const audioLoader = new THREE.AudioLoader(manager);
 
         function initLoader() {
-            // 加载音乐 (失败也继续)
+            // 加载音乐
             audioLoader.load(config.musicPath, 
                 (buffer) => { loadedAudio = buffer; },
                 undefined,
@@ -161,10 +178,11 @@
                 );
             }
         }
-
-        // 如果所有资源加载极快，也触发显示
+        
+        // 当 LoadingManager 完成时，也触发按钮
         manager.onLoad = showEnterButton;
 
+        // 绑定点击事件
         btn.addEventListener('click', startExperience);
 
         // --- 核心逻辑 ---
@@ -173,13 +191,13 @@
         let bloomPass;
 
         function startExperience() {
+            // 点击后，隐藏Loading页，显示Canvas
             document.getElementById('loading-screen').style.opacity = 0;
             setTimeout(()=>document.getElementById('loading-screen').style.display='none', 1000);
             document.getElementById('canvas-container').style.opacity = 1;
             
             initScene();
             
-            // 尝试播放音乐
             if(loadedAudio) {
                 const listener = new THREE.AudioListener(); camera.add(listener);
                 const sound = new THREE.Audio(listener); sound.setBuffer(loadedAudio);
