@@ -7,38 +7,50 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Cinzel', serif; touch-action: none; }
+        
+        /* UI Layer */
         #ivan-studio-ui {
             position: absolute; top: 20px; left: 20px; z-index: 200;
             color: #FFD700; font-weight: bold; letter-spacing: 2px; font-size: 14px;
             text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); pointer-events: none;
         }
+
+        /* Loading Screen */
         #loading-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: #111; z-index: 100; display: flex; flex-direction: column; 
+            background: radial-gradient(circle at center, #111 0%, #000 100%);
+            z-index: 100; display: flex; flex-direction: column; 
             justify-content: center; align-items: center; color: #FFD700;
+            transition: opacity 1s ease;
         }
+
         .loader-ring {
-            display: inline-block; width: 30px; height: 30px;
-            border: 2px solid #333; border-top-color: #FFD700; border-radius: 50%;
+            display: inline-block; width: 40px; height: 40px;
+            border: 2px solid rgba(255,215,0,0.2); border-top-color: #FFD700; border-radius: 50%;
             animation: spin 1s infinite linear; margin-bottom: 20px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         
-        /* 调试信息样式 */
-        #debug-log {
-            font-family: monospace; font-size: 10px; color: #aaa; 
-            max-height: 200px; overflow-y: auto; text-align: left; width: 80%;
-            background: rgba(0,0,0,0.5); padding: 10px; border: 1px solid #333;
-        }
-        .log-success { color: #4caf50; }
-        .log-error { color: #f44336; }
-        
+        #loading-text { font-size: 12px; letter-spacing: 1px; color: #888; margin-bottom: 20px; }
+
+        /* Enter Button (Gold Gradient) */
         #btn-enter {
-            padding: 12px 40px; border: 1px solid #FFD700; background: rgba(0,0,0,0.5);
-            color: #FFD700; font-size: 14px; cursor: pointer; border-radius: 30px;
-            display: none; margin-top: 20px; letter-spacing: 2px;
+            padding: 15px 50px; 
+            border: none; 
+            background: linear-gradient(135deg, #b8860b 0%, #FFD700 50%, #b8860b 100%);
+            color: #000; font-size: 16px; font-weight: bold; cursor: pointer; border-radius: 50px;
+            display: none; /* Initially hidden */
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+            animation: pulse 2s infinite;
+            text-transform: uppercase; letter-spacing: 2px;
         }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
         #canvas-container { position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 2s; }
+        #tips {
+            position: absolute; bottom: 20px; width: 100%; text-align: center;
+            color: rgba(255,255,255,0.3); font-size: 10px; pointer-events: none; z-index: 10;
+        }
     </style>
 </head>
 <body>
@@ -46,14 +58,14 @@
     <div id="ivan-studio-ui">IVAN STUDIO ⚡️</div>
 
     <div id="loading-screen">
-        <div style="font-size: 20px; margin-bottom: 20px;">IVAN STUDIO</div>
+        <div style="font-size: 24px; margin-bottom: 30px; letter-spacing: 3px;">FOR JANE</div>
         <div class="loader-ring" id="spinner"></div>
-        <div id="loading-text" style="margin-bottom:10px;">System Check...</div>
-        <div id="debug-log"></div>
+        <div id="loading-text">PREPARING SURPRISE...</div>
         <button id="btn-enter">OPEN GIFT ⚡️</button>
     </div>
 
     <div id="canvas-container"></div>
+    <div id="tips">Swipe to Rotate • Tap Photo to Zoom</div>
 
     <script type="x-shader/x-vertex" id="particleVertex">
         uniform float uTime; uniform float uBeat; uniform float uFlash;
@@ -105,22 +117,25 @@
         import { RenderPass } from 'https://unpkg.com/three@0.128.0/examples/jsm/postprocessing/RenderPass.js';
         import { UnrealBloomPass } from 'https://unpkg.com/three@0.128.0/examples/jsm/postprocessing/UnrealBloomPass.js';
 
-        // --- 配置区域 ---
+        // --- 配置 ---
         const config = {
-            musicPath: './music.mp3', // 确保这个和GitHub里的名字完全一样！
+            musicPath: './music.mp3', 
             maxPhotos: 30
         };
 
-        // --- 日志辅助函数 ---
-        const logDiv = document.getElementById('debug-log');
-        function log(msg, type='neutral') {
-            const div = document.createElement('div');
-            div.innerText = msg;
-            if(type==='success') div.className = 'log-success';
-            if(type==='error') div.className = 'log-error';
-            logDiv.appendChild(div);
-            logDiv.scrollTop = logDiv.scrollHeight;
+        // --- 强制防卡死逻辑 ---
+        const btn = document.getElementById('btn-enter');
+        const spinner = document.getElementById('spinner');
+        const loadingText = document.getElementById('loading-text');
+
+        function showEnterButton() {
+            spinner.style.display = 'none';
+            loadingText.style.display = 'none';
+            btn.style.display = 'block';
         }
+
+        // 3秒后无论加载是否完成，强制显示按钮 (Fail-safe)
+        setTimeout(showEnterButton, 3000);
 
         // --- 加载器 ---
         let loadedAudio = null;
@@ -130,55 +145,27 @@
         const audioLoader = new THREE.AudioLoader(manager);
 
         function initLoader() {
-            log("🚀 Starting Load Sequence...");
-            
-            // 1. 加载音乐
-            log(`🎵 Loading Music: ${config.musicPath}...`);
+            // 加载音乐 (失败也继续)
             audioLoader.load(config.musicPath, 
-                (buffer) => {
-                    loadedAudio = buffer;
-                    log(`✅ Music Loaded!`, 'success');
-                },
+                (buffer) => { loadedAudio = buffer; },
                 undefined,
-                (err) => {
-                    log(`❌ Music Failed! Check filename?`, 'error');
-                    console.error(err);
-                }
+                (err) => { console.log('Music skipped'); }
             );
 
-            // 2. 加载图片
+            // 加载图片
             for(let i=1; i<=config.maxPhotos; i++) {
-                const url = `./photos/${i}.jpg`; // 强制路径
-                texLoader.load(url, 
-                    (tex) => {
-                        loadedTextures.push(tex);
-                        log(`📷 Found: ${url}`, 'success');
-                    }, 
-                    undefined, 
-                    (err) => {
-                        // 忽略 404，不报错，只是不显示
-                    }
+                texLoader.load(`./photos/${i}.jpg`, 
+                    (tex) => { loadedTextures.push(tex); },
+                    undefined,
+                    (err) => { /* Ignore missing photos */ }
                 );
             }
         }
 
-        manager.onLoad = function() {
-            document.getElementById('spinner').style.display = 'none';
-            document.getElementById('loading-text').innerText = "Load Complete!";
-            
-            if(!loadedAudio) {
-                 log("⚠️ No Music found, continuing silent.", 'error');
-            }
-            if(loadedTextures.length === 0) {
-                 log("⚠️ No Photos found. Check 'photos' folder.", 'error');
-            } else {
-                 log(`✨ Ready with ${loadedTextures.length} photos.`, 'success');
-            }
+        // 如果所有资源加载极快，也触发显示
+        manager.onLoad = showEnterButton;
 
-            const btn = document.getElementById('btn-enter');
-            btn.style.display = 'block';
-            btn.addEventListener('click', startExperience);
-        };
+        btn.addEventListener('click', startExperience);
 
         // --- 核心逻辑 ---
         let scene, camera, renderer, composer, controls, analyser;
@@ -191,6 +178,8 @@
             document.getElementById('canvas-container').style.opacity = 1;
             
             initScene();
+            
+            // 尝试播放音乐
             if(loadedAudio) {
                 const listener = new THREE.AudioListener(); camera.add(listener);
                 const sound = new THREE.Audio(listener); sound.setBuffer(loadedAudio);
