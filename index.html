@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Merry Christmas, Jane!</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Times New Roman', serif; touch-action: none; }
+        
+        #loading-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 100;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            color: #FFD700; transition: opacity 1s;
+        }
+
+        .title { font-size: 24px; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }
+        
+        #btn-enter {
+            padding: 15px 40px; border: 1px solid #FFD700; background: transparent;
+            color: #FFD700; font-size: 16px; cursor: pointer; border-radius: 30px;
+            transition: all 0.3s; display: none; /* 初始隐藏，加载完显示 */
+        }
+        #btn-enter:active { background: #FFD700; color: #000; }
+
+        #progress-bar {
+            width: 200px; height: 2px; background: #333; margin-top: 20px;
+            position: relative;
+        }
+        #progress-fill {
+            width: 0%; height: 100%; background: #FFD700; transition: width 0.2s;
+        }
+        
+        #canvas-container { position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 2s; }
+        
+        /* 提示语 */
+        #tips {
+            position: absolute; bottom: 20px; width: 100%; text-align: center;
+            color: rgba(255,255,255,0.5); font-size: 10px; pointer-events: none; z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading-screen">
+        <div class="title">For Jane</div>
+        <div id="progress-bar"><div id="progress-fill"></div></div>
+        <div id="loading-text" style="font-size:10px; margin-top:5px; color:#666;">Loading Memories...</div>
+        <button id="btn-enter">OPEN GIFT</button>
+    </div>
+
+    <div id="canvas-container"></div>
+    <div id="tips">Swipe to Rotate • Tap Photo to Zoom</div>
+
+    <script type="x-shader/x-vertex" id="particleVertex">
+        uniform float uTime; uniform float uBeat;
+        attribute float aScale; attribute vec3 aColor;
+        varying vec3 vColor;
+        void main() {
+            vColor = aColor;
+            vec3 pos = position;
+            // 旋转
+            float angle = uTime * 0.15;
+            float s = sin(angle); float c = cos(angle);
+            float x = pos.x * c - pos.z * s;
+            float z = pos.x * s + pos.z * c;
+            pos.x = x; pos.z = z;
+            
+            // 律动
+            float beatScale = 1.0 + uBeat * 0.3;
+            vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+            gl_Position = projectionMatrix * mvPosition;
+            gl_PointSize = (5.0 * aScale * beatScale) * (300.0 / -mvPosition.z);
+        }
+    </script>
+    <script type="x-shader/x-fragment" id="particleFragment">
+        varying vec3 vColor;
+        void main() {
+            if(length(gl_PointCoord.xy - 0.5) > 0.5) discard;
+            gl_FragColor = vec4(vColor, 1.0);
+        }
+    </script>
+    <script type="x-shader/x-fragment" id="photoFragment">
+        uniform sampler2D tDiffuse; uniform float uTime;
+        varying vec2 vUv;
+        void main() {
+            vec4 tex = texture2D(tDiffuse, vUv);
+            // 动态金边
+            vec2 d = min(vUv, 1.0 - vUv);
+            if (min(d.x, d.y) < 0.03) {
+                float shine = sin(vUv.x*10.0 + uTime*3.0)*0.5 + 0.5;
+                gl_FragColor = vec4(1.0, 0.84, 0.0, 1.0) * (0.5 + shine);
+            } else {
+                gl_FragColor = tex;
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'https://unpkg.com/three@0.128.0/build/three.module.js';
+        import { OrbitControls } from 'https://unpkg.com/three@0.128.0/examples/jsm/controls/OrbitControls.js';
+        import { EffectComposer } from 'https://unpkg.com/three@0.128.0/examples/jsm/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'https://unpkg.com/three@0.128.0/examples/jsm/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'https://unpkg.com/three@0.128.0/examples/jsm/postprocessing/UnrealBloomPass.js';
+
+        // ================= 配置区域 =================
+        const config = {
+            photoCount: 5,        // 【修改这里】你放在 photos 文件夹里的照片数量
+            photoFolder: './photos/', // 照片路径前缀
+            musicPath: './music.mp3'  // 音乐路径
+        };
+        // ===========================================
+
+        let scene, camera, renderer, composer, controls, analyser, dataArray;
+        const photos = [];
+        let raycaster, touchPoint;
+        let uniforms = { uTime: { value: 0 }, uBeat: { value: 0 } };
+
+        // 资源加载管理器
+        const manager = new THREE.LoadingManager();
+        const textureLoader = new THREE.TextureLoader(manager);
+        const audioLoader = new THREE.AudioLoader(manager);
+        
+        let loadedAudioBuffer = null;
+        let loadedTextures = [];
+
+        // 1. 开始加载资源
+        manager.onProgress = function (url, itemsLoaded, itemsTotal) {
+            const width = (itemsLoaded / itemsTotal) * 100;
+            document.getElementById('progress-fill').style.width = width + '%';
+        };
+
+        manager.onLoad = function () {
+            document.getElementById('loading-text').innerText = "Ready to start";
+            document.getElementById('progress-bar').style.display = 'none';
+            const btn = document.getElementById('btn-enter');
+            btn.style.display = 'block';
+            
+            // 绑定点击进入事件（解决自动播放限制）
+            btn.addEventListener('click', () => {
+                initScene();
+                startAudio(); // 必须在点击中触发
+                
+                document.getElementById('loading-screen').style.opacity = 0;
+                setTimeout(() => { 
+                    document.getElementById('loading-screen').style.display = 'none'; 
+                    document.getElementById('canvas-container').style.opacity = 1;
+                }, 1000);
+            });
+        };
+
+        // 预加载所有照片
+        for(let i=1; i<=config.photoCount; i++) {
+            // 假设图片格式为 jpg，如果混有 png 需要更复杂的逻辑，这里简化为尝试加载
+            // 建议统一转为 jpg
+            textureLoader.load(`${config.photoFolder}${i}.jpg`, (tex) => {
+                loadedTextures.push(tex);
+            });
+        }
+
+        // 预加载音乐
+        audioLoader.load(config.musicPath, function(buffer) {
+            loadedAudioBuffer = buffer;
+        });
+
+
+        // --- 初始化场景 ---
+        function initScene() {
+            const container = document.getElementById('canvas-container');
+            renderer = new THREE.WebGLRenderer({ antialias: false });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            container.appendChild(renderer.domElement);
+
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x000000, 0.02);
+
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 100);
+            camera.position.set(0, 5, 35); // 初始视角
+
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 0.8;
+            controls.enableZoom = false;
+
+            // Bloom
+            const renderPass = new RenderPass(scene, camera);
+            const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+            bloomPass.threshold = 0.1; bloomPass.strength = 1.2; bloomPass.radius = 0.5;
+            composer = new EffectComposer(renderer);
+            composer.addPass(renderPass);
+            composer.addPass(bloomPass);
+
+            // 创建圣诞树粒子
+            const treeGeo = new THREE.BufferGeometry();
+            const pos = [], col = [], scale = [];
+            for(let i=0; i<4000; i++) {
+                const y = Math.random() * 20; 
+                const r = Math.sqrt(Math.random()) * ((1 - y/20) * 9);
+                const a = Math.random() * 6.28;
+                pos.push(Math.cos(a)*r, y-10, Math.sin(a)*r);
+                scale.push(Math.random());
+                const gold = Math.random() > 0.5;
+                col.push(gold?1.0:0.8, gold?0.84:0.0, 0.0);
+            }
+            treeGeo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+            treeGeo.setAttribute('aScale', new THREE.Float32BufferAttribute(scale, 1));
+            treeGeo.setAttribute('aColor', new THREE.Float32BufferAttribute(col, 3));
+            
+            const mat = new THREE.ShaderMaterial({
+                uniforms: uniforms,
+                vertexShader: document.getElementById('particleVertex').textContent,
+                fragmentShader: document.getElementById('particleFragment').textContent,
+                blending: THREE.AdditiveBlending, depthWrite: false, transparent: true
+            });
+            scene.add(new THREE.Points(treeGeo, mat));
+
+            // 创建照片
+            const photoMatBase = new THREE.ShaderMaterial({
+                uniforms: { tDiffuse: { value: null }, uTime: uniforms.uTime },
+                vertexShader: `varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix * modelViewMatrix * vec4(position,1.0);}`,
+                fragmentShader: document.getElementById('photoFragment').textContent,
+                side: THREE.DoubleSide
+            });
+
+            loadedTextures.forEach((tex, idx) => {
+                const aspect = tex.image.width / tex.image.height;
+                const mat = photoMatBase.clone();
+                mat.uniforms.tDiffuse.value = tex;
+                
+                const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2.5 * aspect, 2.5), mat);
+                const y = (Math.random() * 14) - 7;
+                const r = (1 - (y+10)/20) * 8 + 1.2;
+                const a = (idx / loadedTextures.length) * 6.28 + Math.random();
+                
+                mesh.position.set(Math.cos(a)*r, y, Math.sin(a)*r);
+                mesh.lookAt(0, y, 0);
+                scene.add(mesh);
+                photos.push(mesh);
+            });
+
+            // 顶部星星
+            const starGeo = new THREE.ConeGeometry(1, 2, 5); // 简化为锥体提高性能
+            const starMat = new THREE.MeshBasicMaterial({ color: 0xFFD700 });
+            const star = new THREE.Mesh(starGeo, starMat);
+            star.position.y = 11;
+            scene.add(star);
+
+            // 交互
+            raycaster = new THREE.Raycaster();
+            touchPoint = new THREE.Vector2();
+            renderer.domElement.addEventListener('pointerdown', onTouch);
+
+            animate();
+        }
+
+        // --- 音频播放 ---
+        function startAudio() {
+            const listener = new THREE.AudioListener();
+            camera.add(listener);
+            const sound = new THREE.Audio(listener);
+            sound.setBuffer(loadedAudioBuffer);
+            sound.setLoop(true);
+            sound.setVolume(0.5);
+            sound.play();
+
+            analyser = new THREE.AudioAnalyser(sound, 32);
+        }
+
+        // --- 交互逻辑 ---
+        let focusedObj = null;
+        function onTouch(e) {
+            e.preventDefault();
+            touchPoint.x = (e.clientX / window.innerWidth) * 2 - 1;
+            touchPoint.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            
+            raycaster.setFromCamera(touchPoint, camera);
+            const intersects = raycaster.intersectObjects(photos);
+
+            if(intersects.length > 0) {
+                focusedObj = intersects[0].object;
+                controls.autoRotate = false;
+            } else {
+                focusedObj = null;
+                controls.autoRotate = true;
+            }
+        }
+
+        const clock = new THREE.Clock();
+        const vec3 = new THREE.Vector3();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const t = clock.getElapsedTime();
+            uniforms.uTime.value = t;
+
+            if(analyser) {
+                uniforms.uBeat.value = analyser.getAverageFrequency() / 255.0;
+            }
+
+            if(focusedObj) {
+                focusedObj.getWorldPosition(vec3);
+                const n = vec3.clone().setY(0).normalize();
+                camera.position.lerp(vec3.clone().add(n.multiplyScalar(4)), 0.05);
+                controls.target.lerp(vec3, 0.05);
+            } else {
+                controls.update();
+            }
+
+            composer.render();
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth/window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
