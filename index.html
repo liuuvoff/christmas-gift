@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Merry Christmas, Jane!</title>
+    <title>Merry Christmas, Jane! - Subtle Glow Edition</title>
     <link href="https://fonts.loli.net/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; overflow: hidden; background-color: #020001; font-family: 'Cinzel', serif; touch-action: none; }
@@ -12,49 +12,48 @@
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(135deg, #1a0005 0%, #000000 100%);
             z-index: 100; display: flex; flex-direction: column; 
-            justify-content: center; align-items: center; color: #FF69B4; 
+            justify-content: center; align-items: center; color: #FFB6C1; 
             transition: opacity 1.2s ease-in-out;
             padding: 20px; box-sizing: border-box; text-align: center;
         }
 
         .loader-ring {
             display: inline-block; width: 60px; height: 60px;
-            border: 4px solid rgba(255,105,180,0.2); border-top-color: #FF1493; border-radius: 50%;
+            border: 4px solid rgba(255,105,180,0.2); border-top-color: #FFB6C1; border-radius: 50%;
             animation: spin 0.8s infinite linear; margin-bottom: 30px;
-            box-shadow: 0 0 30px rgba(255, 20, 147, 0.5);
+            box-shadow: 0 0 30px rgba(255, 182, 193, 0.3);
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         
         .loading-status { font-size: 14px; letter-spacing: 3px; color: rgba(255,255,255,0.8); margin-bottom: 20px; font-style: italic;}
         
         #btn-enter {
-            padding: 20px 70px; border: 2px solid #FF1493; 
-            background: linear-gradient(135deg, rgba(255,20,147,0.3) 0%, rgba(0,0,0,0.8) 100%);
-            color: #FF69B4; font-size: 18px; font-weight: bold; cursor: pointer; 
-            display: none; box-shadow: 0 0 40px rgba(255, 20, 147, 0.6), inset 0 0 15px #FF1493;
+            padding: 20px 70px; border: 2px solid #FFB6C1; 
+            background: linear-gradient(135deg, rgba(255,182,193,0.2) 0%, rgba(0,0,0,0.8) 100%);
+            color: #FFB6C1; font-size: 18px; font-weight: bold; cursor: pointer; 
+            display: none; box-shadow: 0 0 30px rgba(255, 182, 193, 0.4), inset 0 0 15px #FFB6C1;
             text-transform: uppercase; letter-spacing: 4px; transition: all 0.3s;
-            margin-bottom: 30px; text-shadow: 0 0 10px rgba(255,105,180,0.8);
+            margin-bottom: 30px; text-shadow: 0 0 10px rgba(255,182,193,0.6);
         }
-        #btn-enter:active { transform: scale(0.96); box-shadow: 0 0 20px #FF1493; }
+        #btn-enter:active { transform: scale(0.96); box-shadow: 0 0 15px #FFB6C1; }
 
         .sub-message {
             font-size: 14px; letter-spacing: 2px; color: rgba(255, 182, 193, 0.95); 
-            line-height: 2; margin-top: 15px; text-shadow: 0 0 10px rgba(255,20,147,0.5);
+            line-height: 2; margin-top: 15px; text-shadow: 0 0 8px rgba(255,182,193,0.4);
             text-transform: none; display: none;
         }
         .from-ivan-line {
             font-size: 16px; letter-spacing: 4px; display: block; margin-top: 15px;
-            text-transform: lowercase; font-weight: bold; color: #FF69B4;
+            text-transform: lowercase; font-weight: bold; color: #FFB6C1;
         }
 
         #canvas-container { position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 1.5s; }
         #tips {
             position: absolute; bottom: 30px; width: 100%; text-align: center;
             color: rgba(255,182,193,0.7); font-size: 11px; pointer-events: none; z-index: 10; letter-spacing: 3px;
-            text-shadow: 0 0 8px #FF1493; font-weight: bold;
+            text-shadow: 0 0 8px #FFB6C1; font-weight: bold;
         }
         
-        /* 错误日志显示区，如果黑屏这里会显示红字 */
         #debug-log {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             pointer-events: none; z-index: 9999; color: red; padding: 20px; 
@@ -76,9 +75,9 @@
     <div id="debug-log"></div>
 
     <div id="loading-screen">
-        <div style="font-size: 28px; margin-bottom: 40px; letter-spacing: 6px; text-shadow: 0 0 25px rgba(255,20,147,0.7);">FOR JANE</div>
+        <div style="font-size: 28px; margin-bottom: 40px; letter-spacing: 6px; text-shadow: 0 0 25px rgba(255,182,193,0.7);">FOR JANE</div>
         <div class="loader-ring" id="spinner"></div>
-        <div class="loading-status" id="loading-text">Preparing Surprise...</div>
+        <div class="loading-status" id="loading-text">Creating Subtle Magic...</div>
         
         <button id="btn-enter" onclick="startExperience()">OPEN GIFT</button>
         
@@ -89,45 +88,31 @@
     </div>
 
     <div id="canvas-container"></div>
-    <div id="tips">Hold & Drag to explore Starfield • Release to reform Tree</div>
+    <div id="tips">Drag to explore Starfield • Release to reform Tree</div>
 
     <script>
-        // --- 错误捕获系统 ---
         window.onerror = function(msg, url, line, col, error) {
-            const log = document.getElementById('debug-log');
-            log.style.display = 'block';
-            log.innerText += `Error: ${msg}\nLine: ${line}\n`;
-            document.getElementById('loading-text').innerText = "Error Detected (See Top Left)";
+            const log = document.getElementById('debug-log'); log.style.display = 'block'; log.innerText += `Error: ${msg}\nLine: ${line}\n`;
         };
-
-        // 5秒强制显示按钮，防止无限加载
         setTimeout(() => {
             const btn = document.getElementById('btn-enter');
             if(getComputedStyle(btn).display === 'none') {
-                document.getElementById('spinner').style.display = 'none';
-                document.getElementById('loading-text').style.display = 'none';
-                btn.style.display = 'block';
-                document.querySelector('.sub-message').style.display = 'block';
+                document.getElementById('spinner').style.display = 'none'; document.getElementById('loading-text').style.display = 'none';
+                btn.style.display = 'block'; document.querySelector('.sub-message').style.display = 'block';
             }
         }, 5000);
     </script>
 
     <script type="x-shader/x-vertex" id="commonVertex">
-        uniform float uTime; uniform float uBeat; uniform float uFlash; 
-        uniform float uExplodeState; 
-        attribute float aScale; attribute vec3 aColor; 
-        attribute vec3 aRandomDir; attribute float aRandomDist;
-        attribute float aIndexOffset;
+        uniform float uTime; uniform float uBeat; uniform float uFlash; uniform float uExplodeState; 
+        attribute float aScale; attribute vec3 aColor; attribute vec3 aRandomDir; attribute float aRandomDist; attribute float aIndexOffset;
         varying vec3 vColor; varying float vIndexOffset; varying float vOpacity; varying float vY; 
         void main() {
             vColor = aColor; vIndexOffset = aIndexOffset; vec3 pos = position; vY = pos.y; 
-            float rotFactor = smoothstep(0.8, 0.0, uExplodeState);
-            float angle = uTime * 0.3 * rotFactor; float s = sin(angle); float c = cos(angle);
+            float rotFactor = smoothstep(0.8, 0.0, uExplodeState); float angle = uTime * 0.3 * rotFactor; float s = sin(angle); float c = cos(angle);
             float x = pos.x * c - pos.z * s; float z = pos.x * s + pos.z * c; pos.x = x; pos.z = z;
-            float explodeFactor = smoothstep(0.0, 1.0, uExplodeState) * 45.0; 
-            pos += aRandomDir * explodeFactor * aRandomDist;
-            float beatScale = 1.0 + uBeat * 0.3 + uFlash * 0.2;
-            vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0); gl_Position = projectionMatrix * mvPosition;
+            float explodeFactor = smoothstep(0.0, 1.0, uExplodeState) * 45.0; pos += aRandomDir * explodeFactor * aRandomDist;
+            float beatScale = 1.0 + uBeat * 0.3 + uFlash * 0.2; vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0); gl_Position = projectionMatrix * mvPosition;
             float depthScale = 400.0 / -mvPosition.z; float starSize = mix(1.0, 0.8, uExplodeState); 
             gl_PointSize = ((4.5 + uFlash * 3.0) * aScale * beatScale * starSize) * depthScale;
             vOpacity = step(0.7, sin(uTime * 25.0 + aIndexOffset * 10.0)); 
@@ -135,19 +120,18 @@
     </script>
 
     <script type="x-shader/x-vertex" id="backgroundVertex">
-        uniform float uTime; 
-        attribute float aScale; attribute vec3 aColor; attribute float aIndexOffset;
-        attribute vec3 aDrift; 
+        uniform float uTime; attribute float aScale; attribute vec3 aColor; attribute float aIndexOffset; attribute vec3 aDrift; 
         varying vec3 vColor; varying float vIndexOffset; varying float vOpacity;
         void main() {
             vColor = aColor; vIndexOffset = aIndexOffset; vec3 pos = position;
-            float timeScale = uTime * 0.5;
-            pos.x += sin(timeScale + aDrift.x * 10.0) * aDrift.x * 8.0;
-            pos.y += cos(timeScale * 0.8 + aDrift.y * 10.0) * aDrift.y * 8.0;
-            pos.z += sin(timeScale * 0.6 + aDrift.z * 10.0) * aDrift.z * 8.0;
-            vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-            gl_Position = projectionMatrix * mvPosition;
-            gl_PointSize = (45.0 * aScale) * (300.0 / -mvPosition.z);
+            // 【修改点】速度极慢(0.1)，幅度极小(1.5)
+            float timeScale = uTime * 0.1; 
+            pos.x += sin(timeScale + aDrift.x * 10.0) * aDrift.x * 1.5;
+            pos.y += cos(timeScale * 0.8 + aDrift.y * 10.0) * aDrift.y * 1.5;
+            pos.z += sin(timeScale * 0.6 + aDrift.z * 10.0) * aDrift.z * 1.5;
+            vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0); gl_Position = projectionMatrix * mvPosition;
+            // 【修改点】基础大小从 45 改为 18，变得很小
+            gl_PointSize = (18.0 * aScale) * (300.0 / -mvPosition.z);
             vOpacity = step(0.75, sin(uTime * 20.0 + aIndexOffset * 15.0)); 
         }
     </script>
@@ -156,23 +140,20 @@
         varying vec3 vColor; varying float vY; uniform float uFlash;
         void main() {
             float dist = length(gl_PointCoord.xy - 0.5); if(dist > 0.5) discard;
-            float core = pow(1.0 - dist * 2.0, 8.0);
-            float alphaFade = smoothstep(-14.0, 8.0, vY) * 0.9 + 0.1;
-            vec3 finalColor = vColor * core * 5.0; 
-            finalColor = mix(finalColor, vec3(4.0), uFlash * 0.5);
-            finalColor *= alphaFade;
+            float core = pow(1.0 - dist * 2.0, 8.0); float alphaFade = smoothstep(-14.0, 8.0, vY) * 0.9 + 0.1;
+            vec3 finalColor = vColor * core * 5.0; finalColor = mix(finalColor, vec3(4.0), uFlash * 0.5); finalColor *= alphaFade;
             gl_FragColor = vec4(finalColor, 1.0);
         }
     </script>
 
     <script type="x-shader/x-fragment" id="textureFragment">
-        uniform sampler2D uTexture; uniform float uTime; 
-        varying float vIndexOffset; varying vec3 vColor; varying float vOpacity;
+        uniform sampler2D uTexture; uniform float uTime; varying float vIndexOffset; varying vec3 vColor; varying float vOpacity;
         float random(vec2 st) { return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123); }
         void main() {
             vec4 texColor = texture2D(uTexture, gl_PointCoord); if(texColor.a < 0.1) discard;
             float noise = random(vec2(uTime * 8.0, vIndexOffset)); float flash = step(0.80, noise);
-            gl_FragColor = vec4(vColor * (1.2 + flash*0.6), texColor.a * vOpacity);
+            // 【修改点】降低亮度系数，实现“微微发光” (0.9 + flash*0.4)
+            gl_FragColor = vec4(vColor * (0.9 + flash*0.4), texColor.a * vOpacity);
         }
     </script>
 
@@ -180,34 +161,17 @@
         uniform sampler2D tDiffuse; uniform float uTime; uniform float uFlash; varying vec2 vUv;
         void main() {
             vec4 tex = texture2D(tDiffuse, vUv); vec2 d = min(vUv, 1.0 - vUv); float borderDist = min(d.x, d.y);
-            if (borderDist < 0.03) { float shine = sin(vUv.x*20.0 - uTime*8.0)*0.5 + 0.5; gl_FragColor = vec4(1.0, 0.4, 0.7, 1.0) * (0.8 + shine * 0.5); } 
+            if (borderDist < 0.03) { float shine = sin(vUv.x*20.0 - uTime*8.0)*0.5 + 0.5; gl_FragColor = vec4(1.0, 0.6, 0.7, 1.0) * (0.7 + shine * 0.4); } 
             else { gl_FragColor = vec4(tex.rgb, 1.0); }
         }
     </script>
 
     <script>
         const config = { musicPath: './music.mp3', maxPhotos: 7 }; 
-
-        const btn = document.getElementById('btn-enter');
-        const spinner = document.getElementById('spinner');
-        const loadingText = document.getElementById('loading-text');
-        const subMessage = document.querySelector('.sub-message');
-
-        function showEnterButton() {
-            spinner.style.display = 'none';
-            loadingText.style.display = 'none';
-            btn.style.display = 'block';
-            subMessage.style.display = 'block';
-        }
-        
         let scene, camera, renderer, composer, controls, analyser, clock;
         let uniforms = { uTime: {value:0}, uBeat: {value:0}, uFlash: {value:0}, uExplodeState: {value:0} };
-        // 独立的uniforms引用，防止混淆
         let boltUniforms, heartUniforms, boltBgUniforms, starBgUniforms;
-        let bloomPass;
-        let loadedAudio = null;
-        let loadedTextures = [];
-        let photoMeshes = [];
+        let bloomPass; let loadedAudio = null; let loadedTextures = []; let photoMeshes = [];
 
         function createEmojiTexture(emoji, size) {
             const canvas = document.createElement('canvas'); canvas.width = size; canvas.height = size;
@@ -215,102 +179,46 @@
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(emoji, size/2, size/2+size*0.05);
             const tex = new THREE.CanvasTexture(canvas); tex.needsUpdate = true; return tex;
         }
-        
-        // 创建纹理
-        const boltTexture = createEmojiTexture('⚡️', 128); 
-        const heartTexture = createEmojiTexture('💖', 128);
-        const starTexture = createEmojiTexture('🌟', 64);
-
-        function checkDeps() {
-            if (typeof THREE === 'undefined') {
-                console.error("Three.js not loaded");
-                return false;
-            } return true;
-        }
+        const boltTexture = createEmojiTexture('⚡️', 128); const heartTexture = createEmojiTexture('💖', 128); const starTexture = createEmojiTexture('🌟', 64); 
 
         function initLoader() {
-            if(!checkDeps()) return;
-            const manager = new THREE.LoadingManager();
-            const texLoader = new THREE.TextureLoader(manager);
-            const audioLoader = new THREE.AudioLoader(manager);
-            manager.onLoad = showEnterButton;
-            
-            // 容错处理：如果音频加载失败，不要卡住
-            audioLoader.load(config.musicPath, (buffer) => { loadedAudio = buffer; }, undefined, (err) => { console.log("Audio load error, skipping"); });
-            
-            for(let i=1; i<=config.maxPhotos; i++) {
-                texLoader.load(`./photos/${i}.jpg`, 
-                    (tex) => { 
-                        tex.generateMipmaps = false; tex.minFilter = THREE.LinearFilter; loadedTextures.push(tex); 
-                    }, 
-                    undefined, 
-                    (err) => { console.log(`Photo ${i} missing, skipping`); }
-                );
-            }
+            const manager = new THREE.LoadingManager(); const texLoader = new THREE.TextureLoader(manager); const audioLoader = new THREE.AudioLoader(manager);
+            manager.onLoad = () => {
+                document.getElementById('spinner').style.display = 'none'; document.getElementById('loading-text').style.display = 'none';
+                document.getElementById('btn-enter').style.display = 'block'; document.querySelector('.sub-message').style.display = 'block';
+            };
+            audioLoader.load(config.musicPath, (buffer) => { loadedAudio = buffer; }, undefined, () => console.log("Audio skipped"));
+            for(let i=1; i<=config.maxPhotos; i++) texLoader.load(`./photos/${i}.jpg`, (tex) => { tex.generateMipmaps=false; loadedTextures.push(tex); }, undefined, ()=>console.log(`Photo ${i} skipped`));
         }
         window.onload = initLoader;
 
         window.startExperience = function() {
-            try {
-                if(!checkDeps()) return;
-                document.getElementById('loading-screen').style.opacity = 0;
-                setTimeout(()=>document.getElementById('loading-screen').style.display='none', 1200);
-                document.getElementById('canvas-container').style.opacity = 1;
-                initScene();
-                if(loadedAudio) {
-                    const listener = new THREE.AudioListener(); camera.add(listener);
-                    const sound = new THREE.Audio(listener); sound.setBuffer(loadedAudio);
-                    sound.setLoop(true); sound.setVolume(0.5); sound.play().catch(e=>console.log("Auto-play prevented"));
-                    analyser = new THREE.AudioAnalyser(sound, 32);
-                }
-            } catch(e) {
-                console.error(e);
-                alert("Error starting: " + e.message);
-            }
+            document.getElementById('loading-screen').style.opacity = 0; setTimeout(()=>document.getElementById('loading-screen').style.display='none', 1200);
+            document.getElementById('canvas-container').style.opacity = 1; initScene();
+            if(loadedAudio) { const listener = new THREE.AudioListener(); camera.add(listener); const sound = new THREE.Audio(listener); sound.setBuffer(loadedAudio); sound.setLoop(true); sound.setVolume(0.5); sound.play().catch(()=>{}); analyser = new THREE.AudioAnalyser(sound, 32); }
         }
 
         function createSingleTextPlane(textLines, position, rotationEuler, scale = 1.0) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 1024; canvas.height = 256; 
-            const ctx = canvas.getContext('2d');
-            ctx.shadowColor = "#FF1493"; ctx.shadowBlur = 10; 
-            ctx.fillStyle = '#FFB6C1'; 
-            ctx.font = 'bold 36px Cinzel'; 
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            const lines = Array.isArray(textLines) ? textLines : [textLines];
-            const lineHeight = 45;
-            const startY = (canvas.height - (lines.length - 1) * lineHeight) / 2;
+            const canvas = document.createElement('canvas'); canvas.width = 1024; canvas.height = 256; const ctx = canvas.getContext('2d');
+            ctx.shadowColor = "#FFB6C1"; ctx.shadowBlur = 15; ctx.fillStyle = '#FFB6C1'; ctx.font = 'bold 36px Cinzel'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            const lines = Array.isArray(textLines) ? textLines : [textLines]; const lineHeight = 45; const startY = (canvas.height - (lines.length - 1) * lineHeight) / 2;
             lines.forEach((line, index) => { ctx.fillText(line, canvas.width / 2, startY + index * lineHeight); });
             const tex = new THREE.CanvasTexture(canvas); tex.needsUpdate = true;
             const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
-            const geo = new THREE.PlaneGeometry(20 * scale, 5 * scale);
-            const mesh = new THREE.Mesh(geo, mat);
-            mesh.position.copy(position);
-            if (rotationEuler) mesh.rotation.copy(rotationEuler);
-            scene.add(mesh);
+            const geo = new THREE.PlaneGeometry(20 * scale, 5 * scale); const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.copy(position); if (rotationEuler) mesh.rotation.copy(rotationEuler); scene.add(mesh);
         }
 
         function createStandingStarGeometry(outerRadius, innerRadius, thickness) {
             const shape = new THREE.Shape(); const points = 5;
-            for (let i = 0; i < points * 2; i++) {
-                const l = i % 2 === 1 ? innerRadius : outerRadius; const a = (i / points) * Math.PI - Math.PI / 2; 
-                if (i===0) shape.moveTo(Math.cos(a) * l, Math.sin(a) * l); else shape.lineTo(Math.cos(a) * l, Math.sin(a) * l);
-            }
-            shape.closePath();
-            const extrudeSettings = { depth: thickness, bevelEnabled: true, bevelThickness: 0.2, bevelSize: 0.1, bevelSegments: 3 };
-            const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings); geo.center(); return geo;
+            for (let i = 0; i < points * 2; i++) { const l = i % 2 === 1 ? innerRadius : outerRadius; const a = (i / points) * Math.PI - Math.PI / 2; if (i===0) shape.moveTo(Math.cos(a) * l, Math.sin(a) * l); else shape.lineTo(Math.cos(a) * l, Math.sin(a) * l); }
+            shape.closePath(); const geo = new THREE.ExtrudeGeometry(shape, { depth: thickness, bevelEnabled: true, bevelThickness: 0.2, bevelSize: 0.1, bevelSegments: 3 }); geo.center(); return geo;
         }
 
         function initScene() {
-            const container = document.getElementById('canvas-container');
-            clock = new THREE.Clock();
-            renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 3)); 
-            renderer.toneMapping = THREE.ReinhardToneMapping; renderer.toneMappingExposure = 1.0; 
-            renderer.physicallyCorrectLights = true; renderer.outputEncoding = THREE.sRGBEncoding;
-            container.appendChild(renderer.domElement);
-
+            const container = document.getElementById('canvas-container'); clock = new THREE.Clock();
+            renderer = new THREE.WebGLRenderer({antialias: true, alpha: true}); renderer.setSize(window.innerWidth, window.innerHeight); renderer.setPixelRatio(Math.min(window.devicePixelRatio, 3)); 
+            renderer.toneMapping = THREE.ReinhardToneMapping; renderer.toneMappingExposure = 1.0; renderer.physicallyCorrectLights = true; renderer.outputEncoding = THREE.sRGBEncoding; container.appendChild(renderer.domElement);
             scene = new THREE.Scene(); scene.fog = new THREE.FogExp2(0x050002, 0.015); 
             camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000); camera.position.set(0, 6, 45); 
             controls = new THREE.OrbitControls(camera, renderer.domElement); controls.enableDamping=true; controls.dampingFactor = 0.05; controls.autoRotate=true; controls.autoRotateSpeed=0.8; controls.enableZoom=false; controls.enablePan = false; 
@@ -319,9 +227,9 @@
             bloomPass.threshold = 0.85; bloomPass.strength = 0.5; bloomPass.radius = 0.4;    
             composer = new THREE.EffectComposer(renderer); composer.addPass(new THREE.RenderPass(scene, camera)); composer.addPass(bloomPass);
 
-            const ambientLight = new THREE.AmbientLight(0xFF69B4, 1.0); scene.add(ambientLight);
+            const ambientLight = new THREE.AmbientLight(0xFFB6C1, 1.0); scene.add(ambientLight);
             const mainLight = new THREE.DirectionalLight(0xFFD700, 2.0); mainLight.position.set(10, 20, 10); scene.add(mainLight);
-            const bottomLight = new THREE.PointLight(0xFF69B4, 2.0, 30); bottomLight.position.set(0, -15, 0); scene.add(bottomLight);
+            const bottomLight = new THREE.PointLight(0xFFB6C1, 2.0, 30); bottomLight.position.set(0, -15, 0); scene.add(bottomLight);
 
             createSingleTextPlane(['FOR JANE, MERRY CHRISTMAS,', 'LOVE YOU, WANT YOU'], new THREE.Vector3(0, 9, -16), null, 1.2);
             createSingleTextPlane('这是我们在一起的第三个圣诞', new THREE.Vector3(-13, -7, -12), new THREE.Euler(0, 0.25, 0));
@@ -329,149 +237,76 @@
             createSingleTextPlane('继续初见时的心动💓', new THREE.Vector3(-15, 3, -8), new THREE.Euler(0, 0.4, 0.1));
             createSingleTextPlane('继续离不开我', new THREE.Vector3(11, -4, -10), new THREE.Euler(0, -0.25, -0.05));
 
-            // --- 1. 主体粒子树 ---
-            const treeGeo = new THREE.BufferGeometry(); const maxP = 9000; 
-            const pos = new Float32Array(maxP*3), scale = new Float32Array(maxP), col = new Float32Array(maxP*3);
-            const rDir = new Float32Array(maxP*3), rDist = new Float32Array(maxP), offset = new Float32Array(maxP);
+            // 1. 主体粒子树
+            const treeGeo = new THREE.BufferGeometry(); const maxP = 9000; const pos = new Float32Array(maxP*3), scale = new Float32Array(maxP), col = new Float32Array(maxP*3), rDir = new Float32Array(maxP*3), rDist = new Float32Array(maxP), offset = new Float32Array(maxP);
             let p=0, s=0, c=0, rd=0, rdi=0, off=0;
             for(let i=0; i<maxP; i++) {
-                const y = Math.random() * 22 - 11; const coneR = (1 - (y + 11) / 22) * 15; 
-                const spiralAngle = y * 7.7 + (Math.random() - 0.5) * 1.0; 
-                pos[p++]=Math.cos(spiralAngle)*coneR; pos[p++]=y; pos[p++]=Math.sin(spiralAngle)*coneR;
-                scale[s++]=Math.random()*0.8+0.3; 
+                const y = Math.random() * 22 - 11; const coneR = (1 - (y + 11) / 22) * 15; const spiralAngle = y * 7.7 + (Math.random() - 0.5) * 1.0; 
+                pos[p++]=Math.cos(spiralAngle)*coneR; pos[p++]=y; pos[p++]=Math.sin(spiralAngle)*coneR; scale[s++]=Math.random()*0.8+0.3; 
                 const tone = Math.random() * 0.4 + 0.6; col[c++] = tone + 0.2; col[c++] = tone * 0.5; col[c++] = tone * 0.7; 
-                const theta=Math.random()*Math.PI*2; const phi=Math.acos(2*Math.random()-1);
-                rDir[rd++]=Math.sin(phi)*Math.cos(theta); rDir[rd++]=Math.sin(phi)*Math.sin(theta); rDir[rd++]=Math.cos(phi);
-                rDist[rdi++]=Math.random()*3.0+1.0; offset[off++]=Math.random()*100;
+                const theta=Math.random()*Math.PI*2; const phi=Math.acos(2*Math.random()-1); rDir[rd++]=Math.sin(phi)*Math.cos(theta); rDir[rd++]=Math.sin(phi)*Math.sin(theta); rDir[rd++]=Math.cos(phi); rDist[rdi++]=Math.random()*3.0+1.0; offset[off++]=Math.random()*100;
             }
             treeGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); treeGeo.setAttribute('aScale', new THREE.BufferAttribute(scale, 1)); treeGeo.setAttribute('aColor', new THREE.BufferAttribute(col, 3)); treeGeo.setAttribute('aRandomDir', new THREE.BufferAttribute(rDir, 3)); treeGeo.setAttribute('aRandomDist', new THREE.BufferAttribute(rDist, 1)); treeGeo.setAttribute('aIndexOffset', new THREE.BufferAttribute(offset, 1));
-            const treeMat = new THREE.ShaderMaterial({ uniforms: uniforms, vertexShader: document.getElementById('commonVertex').textContent, fragmentShader: document.getElementById('particleFragment').textContent, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true });
-            scene.add(new THREE.Points(treeGeo, treeMat));
+            scene.add(new THREE.Points(treeGeo, new THREE.ShaderMaterial({ uniforms: uniforms, vertexShader: document.getElementById('commonVertex').textContent, fragmentShader: document.getElementById('particleFragment').textContent, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true })));
 
-            // --- 2. 爱心 (随树爆炸) ---
+            // 2. 爱心
             const heartGeo = new THREE.BufferGeometry(); setupTextureParticles(heartGeo, 500, 0.9, new THREE.Vector3(1.2, 0.7, 0.8), false); 
             heartUniforms = THREE.UniformsUtils.clone(uniforms); heartUniforms.uTexture = { value: heartTexture };
             const heartMat = new THREE.ShaderMaterial({ uniforms: heartUniforms, vertexShader: document.getElementById('commonVertex').textContent, fragmentShader: document.getElementById('textureFragment').textContent, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true });
             heartMat.onBeforeCompile = (shader) => { shader.vertexShader = shader.vertexShader.replace('void main() {', 'varying float vOpacityBoost; void main() { vOpacityBoost = smoothstep(0.2, 0.8, uExplodeState);'); shader.fragmentShader = shader.fragmentShader.replace('void main() {', 'varying float vOpacityBoost; void main() {'); shader.fragmentShader = shader.fragmentShader.replace('texColor.a * vOpacity);', 'texColor.a * vOpacity * vOpacityBoost);'); };
             scene.add(new THREE.Points(heartGeo, heartMat));
 
-            // --- 3. 满屏游动背景 (闪电⚡️ + 星星🌟) ---
-            // 修复：分别为背景闪电和背景星星创建独立的 Uniforms
-            boltBgUniforms = THREE.UniformsUtils.clone(uniforms);
-            boltBgUniforms.uTexture = { value: boltTexture }; // 明确赋值
-            const boltGeo = new THREE.BufferGeometry(); setupBackgroundParticles(boltGeo, 300, 1.5, new THREE.Vector3(1.2, 0.9, 1.0));
-            const boltMat = new THREE.ShaderMaterial({ uniforms: boltBgUniforms, vertexShader: document.getElementById('backgroundVertex').textContent, fragmentShader: document.getElementById('textureFragment').textContent, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true });
-            scene.add(new THREE.Points(boltGeo, boltMat));
+            // 3. 满屏游动背景 (闪电⚡️ + 星星🌟) - 【修改点：淡粉色，小尺寸，慢速】
+            const palePink = new THREE.Vector3(1.0, 0.85, 0.9);
+            boltBgUniforms = THREE.UniformsUtils.clone(uniforms); boltBgUniforms.uTexture = { value: boltTexture };
+            const boltGeo = new THREE.BufferGeometry(); setupBackgroundParticles(boltGeo, 300, 1.0, palePink);
+            scene.add(new THREE.Points(boltGeo, new THREE.ShaderMaterial({ uniforms: boltBgUniforms, vertexShader: document.getElementById('backgroundVertex').textContent, fragmentShader: document.getElementById('textureFragment').textContent, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true })));
 
-            starBgUniforms = THREE.UniformsUtils.clone(uniforms);
-            starBgUniforms.uTexture = { value: starTexture }; // 明确赋值
-            const starBgGeo = new THREE.BufferGeometry(); setupBackgroundParticles(starBgGeo, 400, 1.0, new THREE.Vector3(1.0, 0.8, 0.6));
-            const starBgMat = new THREE.ShaderMaterial({ uniforms: starBgUniforms, vertexShader: document.getElementById('backgroundVertex').textContent, fragmentShader: document.getElementById('textureFragment').textContent, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true });
-            scene.add(new THREE.Points(starBgGeo, starBgMat));
+            starBgUniforms = THREE.UniformsUtils.clone(uniforms); starBgUniforms.uTexture = { value: starTexture };
+            const starBgGeo = new THREE.BufferGeometry(); setupBackgroundParticles(starBgGeo, 400, 0.8, palePink);
+            scene.add(new THREE.Points(starBgGeo, new THREE.ShaderMaterial({ uniforms: starBgUniforms, vertexShader: document.getElementById('backgroundVertex').textContent, fragmentShader: document.getElementById('textureFragment').textContent, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true })));
 
-            // --- 4. 照片墙 (容错处理：有多少照片显示多少) ---
+            // 4. 照片墙
             const pMat = new THREE.ShaderMaterial({ uniforms: {tDiffuse:{value:null}, uTime:uniforms.uTime, uFlash:uniforms.uFlash}, vertexShader: `varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix * modelViewMatrix * vec4(position,1.0);}`, fragmentShader: document.getElementById('photoFragment').textContent, side: THREE.DoubleSide, transparent: false, depthWrite: true });
+            if(loadedTextures.length > 0) { for(let i=0; i<config.maxPhotos; i++) { const tex = loadedTextures[i % loadedTextures.length]; const asp = tex.image ? (tex.image.width/tex.image.height) : 1.0; const m = pMat.clone(); m.uniforms.tDiffuse.value=tex; m.uniforms.uFlash=uniforms.uFlash; const mesh = new THREE.Mesh(new THREE.PlaneGeometry(3.8*asp, 3.8), m); const y=(Math.random()*20)-10, r=(1-(y+12)/28)*15+3.0, a=(i/config.maxPhotos)*6.28+Math.random()*0.5; mesh.userData.originPos = new THREE.Vector3(Math.cos(a)*r, y, Math.sin(a)*r); mesh.userData.targetPos = new THREE.Vector3((Math.random()-0.5)*16, (Math.random()-0.5)*14, (Math.random()*8) + 14); mesh.position.copy(mesh.userData.originPos); mesh.lookAt(0,y,0); mesh.userData.originRot = mesh.rotation.clone(); scene.add(mesh); photoMeshes.push(mesh); }}
             
-            if(loadedTextures.length > 0) {
-                // 如果只传了3张图但maxPhotos是7，就循环使用
-                for(let i=0; i<config.maxPhotos; i++) {
-                    const tex = loadedTextures[i % loadedTextures.length];
-                    const asp = tex.image ? (tex.image.width/tex.image.height) : 1.0;
-                    const m = pMat.clone(); m.uniforms.tDiffuse.value=tex; m.uniforms.uFlash=uniforms.uFlash;
-                    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(3.8*asp, 3.8), m);
-                    const y=(Math.random()*20)-10, r=(1-(y+12)/28)*15+3.0, a=(i/config.maxPhotos)*6.28+Math.random()*0.5;
-                    mesh.userData.originPos = new THREE.Vector3(Math.cos(a)*r, y, Math.sin(a)*r);
-                    mesh.userData.targetPos = new THREE.Vector3((Math.random()-0.5)*16, (Math.random()-0.5)*14, (Math.random()*8) + 14);
-                    mesh.position.copy(mesh.userData.originPos); mesh.lookAt(0,y,0); mesh.userData.originRot = mesh.rotation.clone();
-                    scene.add(mesh); photoMeshes.push(mesh);
-                }
-            }
-            
-            // --- 5. 顶部实体五角星 ---
+            // 5. 顶部实体五角星 - 【修改点：淡粉色，柔和微光】
             const starGeo = createStandingStarGeometry(2.2, 1.0, 0.7); 
-            const starMat = new THREE.MeshPhysicalMaterial({ color: 0xFFC0CB, emissive: 0xFF1493, emissiveIntensity: 1.5, metalness: 0.9, roughness: 0.2, clearcoat: 1.0 });
-            const topStar = new THREE.Mesh(starGeo, starMat);
-            topStar.position.set(0, 13.5, 0); topStar.rotation.x = -Math.PI / 2; 
-            const starLight = new THREE.PointLight(0xFF1493, 2.0, 30); starLight.position.set(0, 14.0, 2.0);
-            scene.add(topStar); scene.add(starLight);
-            this.topStar = topStar;
+            const starMat = new THREE.MeshPhysicalMaterial({ color: 0xFFC0CB, emissive: 0xFFC0CB, emissiveIntensity: 0.6, metalness: 0.9, roughness: 0.2, clearcoat: 1.0 });
+            const topStar = new THREE.Mesh(starGeo, starMat); topStar.position.set(0, 13.5, 0); topStar.rotation.x = -Math.PI / 2; 
+            const starLight = new THREE.PointLight(0xFFB6C1, 2.0, 30); starLight.position.set(0, 14.0, 2.0);
+            scene.add(topStar); scene.add(starLight); this.topStar = topStar;
 
-            setupInteraction();
-            animate();
+            setupInteraction(); animate();
         }
 
         function setupBackgroundParticles(geo, count, scaleMult, colorVec) {
             const bPos=[], bScale=[], bCol=[], bOffset=[], bDrift=[];
-            for(let i=0; i<count; i++) {
-                 bPos.push((Math.random()-0.5)*120, (Math.random()-0.5)*120, (Math.random()-0.5)*120);
-                 bScale.push((Math.random()*0.6 + 0.4)*scaleMult); 
-                 bCol.push(colorVec.x, colorVec.y, colorVec.z);
-                 bOffset.push(Math.random() * 100.0);
-                 bDrift.push(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5);
-            }
+            for(let i=0; i<count; i++) { bPos.push((Math.random()-0.5)*120, (Math.random()-0.5)*120, (Math.random()-0.5)*120); bScale.push((Math.random()*0.6 + 0.4)*scaleMult); bCol.push(colorVec.x, colorVec.y, colorVec.z); bOffset.push(Math.random() * 100.0); bDrift.push(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5); }
             geo.setAttribute('position', new THREE.Float32BufferAttribute(bPos, 3)); geo.setAttribute('aScale', new THREE.Float32BufferAttribute(bScale, 1)); geo.setAttribute('aColor', new THREE.Float32BufferAttribute(bCol, 3)); geo.setAttribute('aIndexOffset', new THREE.Float32BufferAttribute(bOffset, 1)); geo.setAttribute('aDrift', new THREE.Float32BufferAttribute(bDrift, 3));
         }
-
         function setupTextureParticles(geo, count, scaleMult, colorVec, wideSpread) {
             const bPos=[], bScale=[], bCol=[], bRDir=[], bRDist=[], bOffset=[];
-            for(let i=0; i<count; i++) {
-                 let x,y,z; const r=Math.random()*15, a=Math.random()*6.28; x=Math.cos(a)*r; y=Math.random()*25-12; z=Math.sin(a)*r;
-                 bPos.push(x,y,z); bScale.push((Math.random()*0.6 + 0.4)*scaleMult); bCol.push(colorVec.x, colorVec.y, colorVec.z);
-                 bOffset.push(Math.random() * 100.0);
-                 const theta=Math.random()*Math.PI*2; const phi=Math.acos(2*Math.random()-1);
-                 bRDir.push(Math.sin(phi)*Math.cos(theta), Math.sin(phi)*Math.sin(theta), Math.cos(phi)); bRDist.push(Math.random()*35.0 + 15.0);
-            }
+            for(let i=0; i<count; i++) { let x,y,z; const r=Math.random()*15, a=Math.random()*6.28; x=Math.cos(a)*r; y=Math.random()*25-12; z=Math.sin(a)*r; bPos.push(x,y,z); bScale.push((Math.random()*0.6 + 0.4)*scaleMult); bCol.push(colorVec.x, colorVec.y, colorVec.z); bOffset.push(Math.random() * 100.0); const theta=Math.random()*Math.PI*2; const phi=Math.acos(2*Math.random()-1); bRDir.push(Math.sin(phi)*Math.cos(theta), Math.sin(phi)*Math.sin(theta), Math.cos(phi)); bRDist.push(Math.random()*35.0 + 15.0); }
             geo.setAttribute('position', new THREE.Float32BufferAttribute(bPos, 3)); geo.setAttribute('aScale', new THREE.Float32BufferAttribute(bScale, 1)); geo.setAttribute('aColor', new THREE.Float32BufferAttribute(bCol, 3)); geo.setAttribute('aRandomDir', new THREE.Float32BufferAttribute(bRDir, 3)); geo.setAttribute('aRandomDist', new THREE.Float32BufferAttribute(bRDist, 1)); geo.setAttribute('aIndexOffset', new THREE.Float32BufferAttribute(bOffset, 1));
         }
 
         let isInteracting = false; let idleTimer = 0.0; let explodeState = 0.0; let targetExplodeState = 0.0;
-        function setupInteraction() {
-            const canvas = renderer.domElement;
-            canvas.addEventListener('pointerdown', () => { isInteracting = true; idleTimer = 0; });
-            canvas.addEventListener('pointermove', () => { if(isInteracting) idleTimer = 0; });
-            canvas.addEventListener('pointerup', () => { isInteracting = false; });
-            canvas.addEventListener('pointercancel', () => { isInteracting = false; });
-            canvas.addEventListener('pointerleave', () => { isInteracting = false; });
-        }
+        function setupInteraction() { const canvas = renderer.domElement; canvas.addEventListener('pointerdown', () => { isInteracting = true; idleTimer = 0; }); canvas.addEventListener('pointermove', () => { if(isInteracting) idleTimer = 0; }); canvas.addEventListener('pointerup', () => { isInteracting = false; }); canvas.addEventListener('pointercancel', () => { isInteracting = false; }); canvas.addEventListener('pointerleave', () => { isInteracting = false; }); }
 
         let fTime=0, nFlash=3;
         function animate() {
-            requestAnimationFrame(animate); 
-            const t = performance.now()/1000; const dt = clock.getDelta();
-            uniforms.uTime.value = t;
-            if(boltUniforms) boltUniforms.uTime.value = t;
-            if(heartUniforms) heartUniforms.uTime.value = t;
-            if(boltBgUniforms) boltBgUniforms.uTime.value = t;
-            if(starBgUniforms) starBgUniforms.uTime.value = t;
-
+            requestAnimationFrame(animate); const t = performance.now()/1000; const dt = clock.getDelta();
+            uniforms.uTime.value = t; if(boltUniforms) boltUniforms.uTime.value = t; if(heartUniforms) heartUniforms.uTime.value = t; if(boltBgUniforms) boltBgUniforms.uTime.value = t; if(starBgUniforms) starBgUniforms.uTime.value = t;
             if(analyser) { const beat = analyser.getAverageFrequency()/255; uniforms.uBeat.value = beat; if(boltUniforms) boltUniforms.uBeat.value = beat; if(heartUniforms) heartUniforms.uBeat.value = beat; }
-            
             if(this.topStar) this.topStar.rotation.z += dt * 1.5;
-
             if (isInteracting) { targetExplodeState = 1.0; } else { idleTimer += dt; if (idleTimer > 2.5) targetExplodeState = 0.0; }
-            const lerpSpeed = targetExplodeState > explodeState ? dt * 3.0 : dt * 1.0; 
-            explodeState = THREE.MathUtils.lerp(explodeState, targetExplodeState, lerpSpeed);
-            
-            uniforms.uExplodeState.value = explodeState;
-            if(boltUniforms) boltUniforms.uExplodeState.value = explodeState;
-            if(heartUniforms) heartUniforms.uExplodeState.value = explodeState;
-
-            photoMeshes.forEach(mesh => {
-                mesh.position.lerpVectors(mesh.userData.originPos, mesh.userData.targetPos, explodeState);
-                if (explodeState > 0.1) { mesh.lookAt(camera.position); } else {
-                    mesh.rotation.x = THREE.MathUtils.lerp(mesh.rotation.x, mesh.userData.originRot.x, dt*5);
-                    mesh.rotation.y = THREE.MathUtils.lerp(mesh.rotation.y, mesh.userData.originRot.y, dt*5);
-                    mesh.rotation.z = THREE.MathUtils.lerp(mesh.rotation.z, mesh.userData.originRot.z, dt*5);
-                }
-            });
-
-            fTime += 0.016;
-            if(fTime>nFlash) { uniforms.uFlash.value=1; if(boltUniforms)boltUniforms.uFlash.value=1; if(heartUniforms)heartUniforms.uFlash.value=1; fTime=0; nFlash=Math.random()*5+3; }
-            uniforms.uFlash.value *= 0.9; if(boltUniforms)boltUniforms.uFlash.value*=0.9; if(heartUniforms)heartUniforms.uFlash.value*=0.9;
-            
+            const lerpSpeed = targetExplodeState > explodeState ? dt * 3.0 : dt * 1.0; explodeState = THREE.MathUtils.lerp(explodeState, targetExplodeState, lerpSpeed);
+            uniforms.uExplodeState.value = explodeState; if(boltUniforms) boltUniforms.uExplodeState.value = explodeState; if(heartUniforms) heartUniforms.uExplodeState.value = explodeState;
+            photoMeshes.forEach(mesh => { mesh.position.lerpVectors(mesh.userData.originPos, mesh.userData.targetPos, explodeState); if (explodeState > 0.1) { mesh.lookAt(camera.position); } else { mesh.rotation.x = THREE.MathUtils.lerp(mesh.rotation.x, mesh.userData.originRot.x, dt*5); mesh.rotation.y = THREE.MathUtils.lerp(mesh.rotation.y, mesh.userData.originRot.y, dt*5); mesh.rotation.z = THREE.MathUtils.lerp(mesh.rotation.z, mesh.userData.originRot.z, dt*5); } });
+            fTime += 0.016; if(fTime>nFlash) { uniforms.uFlash.value=1; if(boltUniforms)boltUniforms.uFlash.value=1; if(heartUniforms)heartUniforms.uFlash.value=1; fTime=0; nFlash=Math.random()*5+3; } uniforms.uFlash.value *= 0.9; if(boltUniforms)boltUniforms.uFlash.value*=0.9; if(heartUniforms)heartUniforms.uFlash.value*=0.9;
             controls.update(); composer.render();
         }
-        
         window.addEventListener('resize', () => { camera.aspect=window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); composer.setSize(window.innerWidth, window.innerHeight); });
     </script>
 </body>
