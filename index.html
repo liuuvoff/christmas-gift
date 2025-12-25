@@ -8,14 +8,12 @@
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Cinzel', serif; touch-action: none; }
         
-        /* UI Layer */
         #ivan-studio-ui {
             position: absolute; top: 20px; left: 20px; z-index: 200;
             color: #FFD700; font-weight: bold; letter-spacing: 2px; font-size: 14px;
             text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); pointer-events: none;
         }
 
-        /* Loading Screen */
         #loading-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(circle at center, #111 0%, #000 100%);
@@ -32,14 +30,14 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         
         #loading-text { font-size: 12px; letter-spacing: 1px; color: #888; margin-bottom: 20px; }
+        #error-msg { display: none; color: #ff4444; font-size: 12px; margin-top: 10px; max-width: 80%; text-align: center;}
 
-        /* Enter Button (Gold Gradient) */
         #btn-enter {
             padding: 15px 50px; 
             border: none; 
             background: linear-gradient(135deg, #b8860b 0%, #FFD700 50%, #b8860b 100%);
             color: #000; font-size: 16px; font-weight: bold; cursor: pointer; border-radius: 50px;
-            display: none; /* Initially hidden */
+            display: none; 
             box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
             animation: pulse 2s infinite;
             text-transform: uppercase; letter-spacing: 2px;
@@ -51,10 +49,16 @@
             position: absolute; bottom: 20px; width: 100%; text-align: center;
             color: rgba(255,255,255,0.3); font-size: 10px; pointer-events: none; z-index: 10;
         }
-        
-        /* Error message style */
-        #error-msg { position: absolute; bottom: 50px; color: red; font-size: 10px; display: none; }
     </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 </head>
 <body>
 
@@ -64,25 +68,12 @@
         <div style="font-size: 24px; margin-bottom: 30px; letter-spacing: 3px;">FOR JANE</div>
         <div class="loader-ring" id="spinner"></div>
         <div id="loading-text">PREPARING SURPRISE...</div>
-        <button id="btn-enter">OPEN GIFT ⚡️</button>
-        <div id="error-msg">Network Slow... Please Wait</div>
+        <button id="btn-enter" onclick="startExperience()">OPEN GIFT ⚡️</button>
+        <div id="error-msg"></div>
     </div>
 
     <div id="canvas-container"></div>
     <div id="tips">Swipe to Rotate • Tap Photo to Zoom</div>
-
-    <script>
-        setTimeout(() => {
-            const btn = document.getElementById('btn-enter');
-            if(getComputedStyle(btn).display === 'none') {
-                document.getElementById('error-msg').style.display = 'block';
-                // 强制尝试显示按钮
-                document.getElementById('spinner').style.display = 'none';
-                document.getElementById('loading-text').style.display = 'none';
-                btn.style.display = 'block';
-            }
-        }, 5000);
-    </script>
 
     <script type="x-shader/x-vertex" id="particleVertex">
         uniform float uTime; uniform float uBeat; uniform float uFlash;
@@ -127,75 +118,79 @@
         }
     </script>
 
-    <script type="module">
-        import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js';
-        import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/controls/OrbitControls.js';
-        import { EffectComposer } from 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/postprocessing/EffectComposer.js';
-        import { RenderPass } from 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/postprocessing/RenderPass.js';
-        import { UnrealBloomPass } from 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/postprocessing/UnrealBloomPass.js';
+    <script>
+        // --- 错误检测 ---
+        window.addEventListener('error', function(e) {
+            const msg = document.getElementById('error-msg');
+            msg.style.display = 'block';
+            msg.innerText = "Network Blocked. Please refresh or try Wifi.";
+        });
 
         // --- 配置 ---
         const config = {
             musicPath: './music.mp3', 
-            maxPhotos: 30
+            maxPhotos: 3 // 只加载3张
         };
 
         const btn = document.getElementById('btn-enter');
         const spinner = document.getElementById('spinner');
         const loadingText = document.getElementById('loading-text');
 
-        // 显示按钮的函数
-        function showEnterButton() {
+        // 3秒后强制显示按钮
+        setTimeout(() => {
             spinner.style.display = 'none';
             loadingText.style.display = 'none';
             btn.style.display = 'block';
-        }
+        }, 3000);
 
-        // 3秒后无论如何都显示按钮
-        setTimeout(showEnterButton, 3000);
-
-        // --- 加载器 ---
-        let loadedAudio = null;
-        let loadedTextures = [];
-        const manager = new THREE.LoadingManager();
-        const texLoader = new THREE.TextureLoader(manager);
-        const audioLoader = new THREE.AudioLoader(manager);
-
-        function initLoader() {
-            // 加载音乐
-            audioLoader.load(config.musicPath, 
-                (buffer) => { loadedAudio = buffer; },
-                undefined,
-                (err) => { console.log('Music skipped'); }
-            );
-
-            // 加载图片
-            for(let i=1; i<=config.maxPhotos; i++) {
-                texLoader.load(`./photos/${i}.jpg`, 
-                    (tex) => { loadedTextures.push(tex); },
-                    undefined,
-                    (err) => { /* Ignore missing photos */ }
-                );
-            }
-        }
-        
-        // 当 LoadingManager 完成时，也触发按钮
-        manager.onLoad = showEnterButton;
-
-        // 绑定点击事件
-        btn.addEventListener('click', startExperience);
-
-        // --- 核心逻辑 ---
         let scene, camera, renderer, composer, controls, analyser;
         let uniforms = { uTime: {value:0}, uBeat: {value:0}, uFlash: {value:0} };
         let bloomPass;
+        let loadedAudio = null;
+        let loadedTextures = [];
 
-        function startExperience() {
-            // 点击后，隐藏Loading页，显示Canvas
+        // 检查 THREE 是否加载成功
+        function checkDeps() {
+            if (typeof THREE === 'undefined') {
+                document.getElementById('error-msg').innerText = "3D Engine failed to load. Please check network.";
+                document.getElementById('error-msg').style.display = 'block';
+                return false;
+            }
+            return true;
+        }
+
+        // --- 初始化加载器 ---
+        function initLoader() {
+            if(!checkDeps()) return;
+
+            const manager = new THREE.LoadingManager();
+            const texLoader = new THREE.TextureLoader(manager);
+            const audioLoader = new THREE.AudioLoader(manager);
+
+            manager.onLoad = () => {
+                spinner.style.display = 'none';
+                loadingText.style.display = 'none';
+                btn.style.display = 'block';
+            };
+
+            audioLoader.load(config.musicPath, (buffer) => { loadedAudio = buffer; }, undefined, () => {});
+            
+            for(let i=1; i<=config.maxPhotos; i++) {
+                texLoader.load(`./photos/${i}.jpg`, (tex) => { loadedTextures.push(tex); }, undefined, () => {});
+            }
+        }
+
+        // 页面加载完尝试初始化资源
+        window.onload = initLoader;
+
+        // --- 开始体验 ---
+        window.startExperience = function() {
+            if(!checkDeps()) return;
+
             document.getElementById('loading-screen').style.opacity = 0;
             setTimeout(()=>document.getElementById('loading-screen').style.display='none', 1000);
             document.getElementById('canvas-container').style.opacity = 1;
-            
+
             initScene();
             
             if(loadedAudio) {
@@ -235,12 +230,14 @@
             scene = new THREE.Scene(); scene.fog = new THREE.FogExp2(0x000000, 0.02);
             camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 100);
             camera.position.set(0, 5, 38);
-            controls = new OrbitControls(camera, renderer.domElement);
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping=true; controls.autoRotate=true; controls.autoRotateSpeed=0.8; controls.enableZoom=false;
 
-            bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+            bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
             bloomPass.threshold=0; bloomPass.strength=1.5; bloomPass.radius=0.5;
-            composer = new EffectComposer(renderer); composer.addPass(new RenderPass(scene, camera)); composer.addPass(bloomPass);
+            composer = new THREE.EffectComposer(renderer); 
+            composer.addPass(new THREE.RenderPass(scene, camera)); 
+            composer.addPass(bloomPass);
 
             // Particles
             const treeGeo = new THREE.BufferGeometry();
@@ -304,7 +301,7 @@
 
         let fTime=0, nFlash=2;
         function animate() {
-            requestAnimationFrame(animate); const t = new THREE.Clock().getElapsedTime();
+            requestAnimationFrame(animate); 
             uniforms.uTime.value = performance.now()/1000;
             if(analyser) uniforms.uBeat.value = analyser.getAverageFrequency()/255;
             
@@ -317,8 +314,6 @@
         }
         
         window.addEventListener('resize', () => { camera.aspect=window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); composer.setSize(window.innerWidth, window.innerHeight); });
-        
-        initLoader();
     </script>
 </body>
 </html>
