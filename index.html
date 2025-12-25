@@ -3,20 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Merry Christmas, Jane!</title>
+    <title>Merry Christmas, Jane! - IVAN STUDIO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Times New Roman', serif; touch-action: none; }
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Cinzel', serif; touch-action: none; }
         
+        /* --- UI Layer --- */
+        #ivan-studio-ui {
+            position: absolute; top: 20px; left: 20px; z-index: 200;
+            color: #FFD700; font-weight: bold; letter-spacing: 2px; font-size: 14px;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            pointer-events: none; /* 让点击穿透 */
+        }
+        #tips {
+            position: absolute; bottom: 20px; width: 100%; text-align: center;
+            color: rgba(255,255,255,0.4); font-size: 10px; pointer-events: none; z-index: 10;
+        }
+
+        /* --- Loading Screen --- */
         #loading-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
-            z-index: 100;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center;
             color: #FFD700; transition: opacity 1s;
         }
-
         .title { font-size: 24px; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 3px; text-shadow: 0 0 10px #FFD700; }
-        
         #btn-enter {
             padding: 12px 40px; border: 1px solid #FFD700; background: rgba(0,0,0,0.5);
             color: #FFD700; font-size: 14px; cursor: pointer; border-radius: 30px;
@@ -24,73 +35,113 @@
             box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
         }
         #btn-enter:active { background: #FFD700; color: #000; }
-
         .loader-ring {
             display: inline-block; width: 40px; height: 40px;
-            border: 2px solid rgba(255, 215, 0, 0.3);
-            border-radius: 50%; border-top-color: #FFD700;
-            animation: spin 1s ease-in-out infinite;
-            margin-bottom: 10px;
+            border: 2px solid rgba(255, 215, 0, 0.3); border-radius: 50%; border-top-color: #FFD700;
+            animation: spin 1s ease-in-out infinite; margin-bottom: 10px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-
         #loading-text { font-size: 10px; color: #888; margin-top: 10px; font-family: sans-serif; }
-
         #canvas-container { position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 2s; }
-        #tips {
-            position: absolute; bottom: 20px; width: 100%; text-align: center;
-            color: rgba(255,255,255,0.4); font-size: 10px; pointer-events: none; z-index: 10;
-        }
     </style>
 </head>
 <body>
+
+    <div id="ivan-studio-ui">IVAN STUDIO ⚡️</div>
 
     <div id="loading-screen">
         <div class="title">For Jane</div>
         <div class="loader-ring" id="spinner"></div>
         <div id="loading-text">Scanning Memories...</div>
-        <button id="btn-enter">OPEN GIFT</button>
+        <button id="btn-enter">OPEN GIFT ⚡️</button>
     </div>
 
     <div id="canvas-container"></div>
     <div id="tips">Swipe to Rotate • Tap Photo to Zoom</div>
 
     <script type="x-shader/x-vertex" id="particleVertex">
-        uniform float uTime; uniform float uBeat;
-        attribute float aScale; attribute vec3 aColor;
+        uniform float uTime; 
+        uniform float uBeat;
+        uniform float uFlash; // 雷电闪光强度
+        attribute float aScale; 
+        attribute vec3 aColor;
         varying vec3 vColor;
         void main() {
             vColor = aColor;
             vec3 pos = position;
-            float angle = uTime * 0.15;
+            
+            // 缓慢旋转
+            float angle = uTime * 0.1;
             float s = sin(angle); float c = cos(angle);
             float x = pos.x * c - pos.z * s;
             float z = pos.x * s + pos.z * c;
             pos.x = x; pos.z = z;
-            float beatScale = 1.0 + uBeat * 0.5;
+            
+            // 律动 + 闪电瞬间膨胀
+            float beatScale = 1.0 + uBeat * 0.3 + uFlash * 0.2;
+            
             vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
             gl_Position = projectionMatrix * mvPosition;
-            gl_PointSize = (5.0 * aScale * beatScale) * (300.0 / -mvPosition.z);
+            
+            // 闪电时粒子变大
+            float flashSizeAdd = uFlash * 5.0;
+            gl_PointSize = ((5.0 + flashSizeAdd) * aScale * beatScale) * (300.0 / -mvPosition.z);
         }
     </script>
     <script type="x-shader/x-fragment" id="particleFragment">
         varying vec3 vColor;
+        uniform float uFlash;
         void main() {
             if(length(gl_PointCoord.xy - 0.5) > 0.5) discard;
-            gl_FragColor = vec4(vColor, 1.0);
+            // 闪电时颜色变亮变白
+            vec3 finalColor = mix(vColor, vec3(1.0), uFlash * 0.8);
+            gl_FragColor = vec4(finalColor, 1.0);
         }
     </script>
+
+    <script type="x-shader/x-vertex" id="sparkVertex">
+        uniform float uTime;
+        attribute float aOffset; // 随机偏移
+        varying float vOpacity;
+        void main() {
+            vec3 pos = position;
+            // 极其快速的随机抖动
+            float jitterSpeed = uTime * 20.0 + aOffset;
+            pos.x += sin(jitterSpeed) * 0.5;
+            pos.y += cos(jitterSpeed * 1.3) * 0.5;
+            pos.z += sin(jitterSpeed * 0.7) * 0.5;
+            
+            // 随机闪烁透明度
+            vOpacity = step(0.8, sin(uTime * 30.0 + aOffset));
+
+            vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+            gl_Position = projectionMatrix * mvPosition;
+            gl_PointSize = 8.0 * (300.0 / -mvPosition.z);
+        }
+    </script>
+    <script type="x-shader/x-fragment" id="sparkFragment">
+        varying float vOpacity;
+        void main() {
+            if(length(gl_PointCoord.xy - 0.5) > 0.5) discard;
+            // 纯白带蓝光的电火花
+            gl_FragColor = vec4(0.8, 0.9, 1.0, vOpacity);
+        }
+    </script>
+
     <script type="x-shader/x-fragment" id="photoFragment">
-        uniform sampler2D tDiffuse; uniform float uTime;
+        uniform sampler2D tDiffuse; uniform float uTime; uniform float uFlash;
         varying vec2 vUv;
         void main() {
             vec4 tex = texture2D(tDiffuse, vUv);
             vec2 d = min(vUv, 1.0 - vUv);
+            // 边框在闪电时会爆闪
+            float borderFlash = 1.0 + uFlash * 3.0;
             if (min(d.x, d.y) < 0.03) {
                 float shine = sin(vUv.x*10.0 + uTime*3.0)*0.5 + 0.5;
-                gl_FragColor = vec4(1.0, 0.84, 0.0, 1.0) * (0.5 + shine);
+                gl_FragColor = vec4(1.0, 0.84, 0.0, 1.0) * (0.5 + shine) * borderFlash;
             } else {
-                gl_FragColor = tex;
+                // 照片主体在闪电时稍微变亮
+                gl_FragColor = tex + vec4(uFlash*0.3);
             }
         }
     </script>
@@ -104,9 +155,9 @@
 
         // ================= 配置区域 =================
         const config = {
-            maxPhotosToCheck: 30, // 代码会自动尝试加载 1.jpg 到 30.jpg
+            maxPhotosToCheck: 30,
             photoFolder: './photos/',
-            musicPath: './music.mp3'
+            musicPath: './music.mp3' // 确保这里和你的文件名一致
         };
         // ===========================================
 
@@ -115,82 +166,78 @@
         let loadedTextures = [];
         const photos = [];
         let raycaster, touchPoint;
-        let uniforms = { uTime: { value: 0 }, uBeat: { value: 0 } };
+        // 新增 uFlash 用于雷电效果
+        let uniforms = { uTime: { value: 0 }, uBeat: { value: 0 }, uFlash: { value: 0 } };
+        let bloomPass;
 
-        // --- 智能加载逻辑 ---
+        // --- 辅助函数：创建文字粒子 ---
+        function createTextParticles(text, fontSize, particleSize, containerGeo) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 512; canvas.height = 128;
+            ctx.fillStyle = 'black'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'white'; font = `bold ${fontSize}px 'Cinzel', serif`;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(text, canvas.width/2, canvas.height/2);
+
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            const pos = containerGeo.getAttribute('position').array;
+            const scale = containerGeo.getAttribute('aScale').array;
+            const col = containerGeo.getAttribute('aColor').array;
+            let pIndex = pos.length; let sIndex = scale.length; let cIndex = col.length;
+
+            for(let y=0; y<canvas.height; y+=particleSize) {
+                for(let x=0; x<canvas.width; x+=particleSize) {
+                    if(imgData[(y*canvas.width + x)*4] > 128) { // 如果是白色像素
+                        // 将 2D 坐标映射到 3D 空间 (环绕树底)
+                        const u = x / canvas.width; const v = y / canvas.height;
+                        const angle = (u - 0.5) * Math.PI * 1.5; // 弧度范围
+                        const radius = 10;
+                        const pX = Math.cos(angle) * radius;
+                        const pY = (1.0 - v) * 3 - 11; // 放在树底部 y=-11 到 -8 附近
+                        const pZ = Math.sin(angle) * radius;
+                        
+                        pos[pIndex++] = pX; pos[pIndex+1] = pY; pos[pIndex+2] = pZ;
+                        scale[sIndex++] = Math.random() * 0.5 + 0.5;
+                        col[cIndex++] = 1.0; col[cIndex+1] = 0.84; col[cIndex+2] = 0.0; // 金色
+                    }
+                }
+            }
+            return { pIndex, sIndex, cIndex };
+        }
+
+        // --- 智能加载逻辑 (保持不变) ---
         function initLoader() {
             const texLoader = new THREE.TextureLoader();
             const audioLoader = new THREE.AudioLoader();
-            
             let itemsProcessed = 0;
-            // 总任务数 = 检查图片的数量 + 1个音频
             const totalItems = config.maxPhotosToCheck + 1; 
-
             const checkComplete = () => {
                 itemsProcessed++;
                 const percent = Math.floor((itemsProcessed / totalItems) * 100);
                 document.getElementById('loading-text').innerText = `Scanning Memories... ${percent}%`;
-
-                if (itemsProcessed >= totalItems) {
-                    onAllAssetsLoaded();
-                }
+                if (itemsProcessed >= totalItems) onAllAssetsLoaded();
             };
-
-            // 1. 加载音频
-            audioLoader.load(config.musicPath, 
-                (buffer) => {
-                    loadedAudioBuffer = buffer;
-                    checkComplete();
-                },
-                undefined,
-                (err) => {
-                    console.warn("Audio not found, continuing silent.");
-                    checkComplete(); // 没找到也算完成，防止卡死
-                }
-            );
-
-            // 2. 尝试加载图片 (1.jpg ... 30.jpg)
+            audioLoader.load(config.musicPath, (buffer) => { loadedAudioBuffer = buffer; checkComplete(); }, undefined, (err) => checkComplete());
             for (let i = 1; i <= config.maxPhotosToCheck; i++) {
-                const url = `${config.photoFolder}${i}.jpg`;
-                texLoader.load(
-                    url,
-                    (tex) => {
-                        // 成功找到图片
-                        console.log(`Found photo: ${url}`);
-                        loadedTextures.push(tex);
-                        checkComplete();
-                    },
-                    undefined,
-                    (err) => {
-                        // 没找到图片 (404)，忽略即可
-                        checkComplete();
-                    }
-                );
+                texLoader.load(`${config.photoFolder}${i}.jpg`, (tex) => { loadedTextures.push(tex); checkComplete(); }, undefined, (err) => checkComplete());
             }
         }
 
         function onAllAssetsLoaded() {
             document.getElementById('spinner').style.display = 'none';
-            
-            if (loadedTextures.length === 0) {
-                document.getElementById('loading-text').innerText = "No photos found (Check file names 1.jpg...)";
-                document.getElementById('loading-text').style.color = 'red';
-            } else {
-                document.getElementById('loading-text').innerText = `Ready with ${loadedTextures.length} Memories`;
-                const btn = document.getElementById('btn-enter');
-                btn.style.display = 'block';
-                
-                btn.addEventListener('click', () => {
-                    initScene();
-                    if(loadedAudioBuffer) startAudio();
-                    
-                    document.getElementById('loading-screen').style.opacity = 0;
-                    setTimeout(() => { 
-                        document.getElementById('loading-screen').style.display = 'none'; 
-                        document.getElementById('canvas-container').style.opacity = 1;
-                    }, 1000);
-                });
-            }
+            document.getElementById('loading-text').innerText = `Ready with ${loadedTextures.length} Memories`;
+            const btn = document.getElementById('btn-enter');
+            btn.style.display = 'block';
+            btn.addEventListener('click', () => {
+                initScene();
+                if(loadedAudioBuffer) startAudio();
+                document.getElementById('loading-screen').style.opacity = 0;
+                setTimeout(() => { 
+                    document.getElementById('loading-screen').style.display = 'none'; 
+                    document.getElementById('canvas-container').style.opacity = 1;
+                }, 1000);
+            });
         }
 
         // --- 场景初始化 ---
@@ -206,38 +253,45 @@
             scene.fog = new THREE.FogExp2(0x000000, 0.02);
 
             camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 100);
-            camera.position.set(0, 5, 35);
+            camera.position.set(0, 5, 38);
 
             controls = new OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            controls.autoRotate = true;
-            controls.autoRotateSpeed = 0.8;
-            controls.enableZoom = false;
+            controls.enableDamping = true; controls.autoRotate = true; controls.autoRotateSpeed = 0.8; controls.enableZoom = false;
 
-            // Bloom
-            const composerPass = new RenderPass(scene, camera);
-            const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-            bloomPass.threshold = 0.1; bloomPass.strength = 1.2; bloomPass.radius = 0.5;
+            // Bloom with high strength for lightning flash
+            bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+            bloomPass.threshold = 0.1; bloomPass.strength = 1.5; bloomPass.radius = 0.5;
             composer = new EffectComposer(renderer);
-            composer.addPass(composerPass);
+            composer.addPass(new RenderPass(scene, camera));
             composer.addPass(bloomPass);
 
-            // 粒子树
+            // --- 1. 主要粒子几何体 (树 + 文字) ---
+            // 预分配足够大的 Buffer
+            const maxParticles = 8000;
             const treeGeo = new THREE.BufferGeometry();
-            const pos = [], col = [], scale = [];
-            for(let i=0; i<4500; i++) {
-                const y = Math.random() * 20; 
-                const r = Math.sqrt(Math.random()) * ((1 - y/20) * 9);
-                const a = Math.random() * 6.28;
-                pos.push(Math.cos(a)*r, y-10, Math.sin(a)*r);
-                scale.push(Math.random());
-                const gold = Math.random() > 0.5;
-                col.push(gold?1.0:0.8, gold?0.84:0.0, 0.0);
-            }
-            treeGeo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-            treeGeo.setAttribute('aScale', new THREE.Float32BufferAttribute(scale, 1));
-            treeGeo.setAttribute('aColor', new THREE.Float32BufferAttribute(col, 3));
+            const pos = new Float32Array(maxParticles * 3);
+            const scale = new Float32Array(maxParticles);
+            const col = new Float32Array(maxParticles * 3);
             
+            treeGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            treeGeo.setAttribute('aScale', new THREE.BufferAttribute(scale, 1));
+            treeGeo.setAttribute('aColor', new THREE.BufferAttribute(col, 3));
+
+            // 生成树粒子
+            let pIdx = 0; let sIdx = 0; let cIdx = 0;
+            for(let i=0; i<5000; i++) {
+                const y = Math.random() * 20; const r = Math.sqrt(Math.random()) * ((1 - y/20) * 9); const a = Math.random() * 6.28;
+                pos[pIdx++] = Math.cos(a)*r; pos[pIdx++] = y-10; pos[pIdx++] = Math.sin(a)*r;
+                scale[sIdx++] = Math.random();
+                const gold = Math.random() > 0.6;
+                col[cIdx++] = gold?1.0:0.8; col[cIdx++] = gold?0.84:0.05; col[cIdx++] = 0.05;
+            }
+
+            // 生成 "IVAN STUDIO" 粒子并加入同一个 Geometry
+            const textEndIndices = createTextParticles("IVAN STUDIO", 80, 3, treeGeo);
+            // 更新 Buffer 的实际绘制范围
+            treeGeo.setDrawRange(0, textEndIndices.pIndex / 3);
+
             const mat = new THREE.ShaderMaterial({
                 uniforms: uniforms,
                 vertexShader: document.getElementById('particleVertex').textContent,
@@ -246,9 +300,28 @@
             });
             scene.add(new THREE.Points(treeGeo, mat));
 
-            // 生成照片墙
+            // --- 2. 雷电火花粒子系统 ---
+            const sparkCount = 200;
+            const sparkGeo = new THREE.BufferGeometry();
+            const sparkPos = []; const sparkOffset = [];
+            for(let i=0; i<sparkCount; i++) {
+                sparkPos.push((Math.random()-0.5)*20, (Math.random()-0.5)*20, (Math.random()-0.5)*20);
+                sparkOffset.push(Math.random() * 100); // 随机时间偏移
+            }
+            sparkGeo.setAttribute('position', new THREE.Float32BufferAttribute(sparkPos, 3));
+            sparkGeo.setAttribute('aOffset', new THREE.Float32BufferAttribute(sparkOffset, 1));
+            const sparkMat = new THREE.ShaderMaterial({
+                uniforms: { uTime: uniforms.uTime },
+                vertexShader: document.getElementById('sparkVertex').textContent,
+                fragmentShader: document.getElementById('sparkFragment').textContent,
+                blending: THREE.AdditiveBlending, transparent: true, depthWrite: false
+            });
+            scene.add(new THREE.Points(sparkGeo, sparkMat));
+
+
+            // --- 3. 照片墙 ---
             const photoMatBase = new THREE.ShaderMaterial({
-                uniforms: { tDiffuse: { value: null }, uTime: uniforms.uTime },
+                uniforms: { tDiffuse: { value: null }, uTime: uniforms.uTime, uFlash: uniforms.uFlash },
                 vertexShader: `varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix * modelViewMatrix * vec4(position,1.0);}`,
                 fragmentShader: document.getElementById('photoFragment').textContent,
                 side: THREE.DoubleSide
@@ -258,66 +331,73 @@
                 const aspect = tex.image.width / tex.image.height;
                 const mat = photoMatBase.clone();
                 mat.uniforms.tDiffuse.value = tex;
+                // 必须共享 uFlash uniform 才能同步闪烁
+                mat.uniforms.uFlash = uniforms.uFlash; 
                 
                 const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2.5 * aspect, 2.5), mat);
-                const y = (Math.random() * 14) - 7;
-                const r = (1 - (y+10)/20) * 8 + 1.2;
-                // 均匀分布
-                const a = (idx / loadedTextures.length) * 6.28 + Math.random(); 
-                
-                mesh.position.set(Math.cos(a)*r, y, Math.sin(a)*r);
-                mesh.lookAt(0, y, 0);
-                scene.add(mesh);
-                photos.push(mesh);
+                const y = (Math.random() * 14) - 7; const r = (1 - (y+10)/20) * 8 + 1.5;
+                const a = (idx / loadedTextures.length) * 6.28 + Math.random();
+                mesh.position.set(Math.cos(a)*r, y, Math.sin(a)*r); mesh.lookAt(0, y, 0);
+                scene.add(mesh); photos.push(mesh);
             });
 
-            // 星星
+            // 顶部星星
             const star = new THREE.Mesh(new THREE.ConeGeometry(1, 2, 5), new THREE.MeshBasicMaterial({ color: 0xFFD700 }));
-            star.position.y = 11;
-            scene.add(star);
+            star.position.y = 11; scene.add(star);
 
-            raycaster = new THREE.Raycaster();
-            touchPoint = new THREE.Vector2();
+            raycaster = new THREE.Raycaster(); touchPoint = new THREE.Vector2();
             renderer.domElement.addEventListener('pointerdown', onTouch);
 
             animate();
         }
 
         function startAudio() {
-            const listener = new THREE.AudioListener();
-            camera.add(listener);
-            const sound = new THREE.Audio(listener);
-            sound.setBuffer(loadedAudioBuffer);
-            sound.setLoop(true);
-            sound.setVolume(0.5);
-            sound.play();
+            const listener = new THREE.AudioListener(); camera.add(listener);
+            const sound = new THREE.Audio(listener); sound.setBuffer(loadedAudioBuffer);
+            sound.setLoop(true); sound.setVolume(0.5); sound.play();
             analyser = new THREE.AudioAnalyser(sound, 32);
         }
 
         let focusedObj = null;
         function onTouch(e) {
             e.preventDefault();
-            touchPoint.x = (e.clientX / window.innerWidth) * 2 - 1;
-            touchPoint.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            touchPoint.x = (e.clientX / window.innerWidth) * 2 - 1; touchPoint.y = -(e.clientY / window.innerHeight) * 2 + 1;
             raycaster.setFromCamera(touchPoint, camera);
             const intersects = raycaster.intersectObjects(photos);
             if(intersects.length > 0) { focusedObj = intersects[0].object; controls.autoRotate = false; } 
             else { focusedObj = null; controls.autoRotate = true; }
         }
 
-        const clock = new THREE.Clock();
-        const vec3 = new THREE.Vector3();
+        const clock = new THREE.Clock(); const vec3 = new THREE.Vector3();
+        let flashTimer = 0;
+        let nextFlashTime = Math.random() * 3 + 1; // 下次闪电时间
+
         function animate() {
             requestAnimationFrame(animate);
             const t = clock.getElapsedTime();
             uniforms.uTime.value = t;
             if(analyser) uniforms.uBeat.value = analyser.getAverageFrequency() / 255.0;
 
+            // --- 雷电闪光逻辑 ---
+            flashTimer += clock.getDelta();
+            // 闪光触发
+            if(flashTimer > nextFlashTime) {
+                uniforms.uFlash.value = 1.0; // 瞬间最亮
+                flashTimer = 0;
+                nextFlashTime = Math.random() * 4 + 2; // 随机下次闪光间隔
+                // 闪光时 Bloom 增强
+                bloomPass.strength = 3.0;
+                bloomPass.radius = 1.0;
+            }
+            // 闪光迅速衰减
+            uniforms.uFlash.value *= 0.85; 
+            // Bloom 恢复正常
+            bloomPass.strength = THREE.MathUtils.lerp(bloomPass.strength, 1.5, 0.1);
+            bloomPass.radius = THREE.MathUtils.lerp(bloomPass.radius, 0.5, 0.1);
+
             if(focusedObj) {
-                focusedObj.getWorldPosition(vec3);
-                const n = vec3.clone().setY(0).normalize();
-                camera.position.lerp(vec3.clone().add(n.multiplyScalar(4)), 0.05);
-                controls.target.lerp(vec3, 0.05);
+                focusedObj.getWorldPosition(vec3); const n = vec3.clone().setY(0).normalize();
+                camera.position.lerp(vec3.clone().add(n.multiplyScalar(4)), 0.05); controls.target.lerp(vec3, 0.05);
             } else {
                 controls.update();
             }
@@ -325,13 +405,10 @@
         }
 
         window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth/window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            composer.setSize(window.innerWidth, window.innerHeight);
+            camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight); composer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        // 启动加载
         initLoader();
     </script>
 </body>
